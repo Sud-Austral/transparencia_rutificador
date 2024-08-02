@@ -188,18 +188,29 @@ def calificacion_nivel_2(df):
     final["Homologado 2"] = final["Homologado 2"].fillna("Sin Clasificar")
     return final
 
-
-if __name__ == '__main__':
-    #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
-    for i in comunas:
-        base = string_to_url(i)
-        url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
+def process_comuna(comuna):
+    base = string_to_url(comuna)
+    url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
+    
+    try:
+        # Leer el archivo CSV
         df = pd.read_csv(url, compression='xz', sep='\t')
+        
+        # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
         df = rutificador(df)
         df = getPagos(df)
         df = calificacion_nivel_1(df)
         df = calificacion_nivel_2(df)
-        df.to_excel(f"test/{i}.xlsx", index=False)
+        
+        # Guardar el DataFrame procesado en un archivo Excel
+        df.to_excel(f"test/{comuna}.xlsx", index=False)
+    except Exception as e:
+        print(f"Error al procesar {comuna}: {e}")
+
+if __name__ == '__main__':
+    #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
+    for comuna in comunas:
+        process_comuna(comuna)
         #print(url)
         #print(df2)
