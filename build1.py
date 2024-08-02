@@ -21,7 +21,15 @@ base = "https://www.cplt.cl/transparencia_activa/datoabierto/archivos/"
 deseadas =["Nombres","Paterno","Materno","organismo_nombre",'anyo', 'Mes','tipo_calificacionp']
 
 pattern_maximo = r'^90.{6}$'
+DB_RUT = pd.read_csv("ENCONTRADOS_10.csv", compression='xz', sep='\t')
+ref = pd.read_excel(r"calificacion_key3 (7).xlsx", sheet_name="MATRIZ", skiprows=2)
+ref2 = ref[["key","Secuencia"]]
+ref3 = ref2.sort_values(by="Secuencia")
+listaCalificacion = list(ref3["key"])
+refFinal = ref[["key","Homologado"]]
 
+hologado2 = pd.read_excel(r"homologa2 (1).xlsx", sheet_name="homologa2", skiprows=2)
+hologado22 = hologado2[["Homologado","key","Secuencia"]].sort_values("Secuencia")
 
 TA_PersonalPlanta                       = f"{base}TA_PersonalPlanta.csv"
 TA_PersonalContrata                     = f"{base}TA_PersonalContrata.csv"
@@ -90,6 +98,10 @@ def limpiar_texto(texto):
     texto_limpio = re.sub(r'[^A-Z ]', '', texto.upper())
     return texto_limpio
 
+def rutificador(df):
+    merge = df.merge(DB_RUT, left_on="NombreCompleto",right_on="NombreCompleto",how="left")
+    return merge
+
 def get_nombre_completo(df):
     df["Nombres2"] = df["Nombres"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
     df["Paterno2"] = df["Paterno"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
@@ -123,6 +135,59 @@ def getPagos(df):
     df2['remuneracionbruta_mensual'] = df2['remuneracionbruta_mensual'].map(fixRemuneracion)
     return df2
 
+def calificacion_nivel_1(df):
+    df["clean"] = df["tipo_calificacionp"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
+    calificacion2 = df[["clean"]].drop_duplicates()
+    calificacion2 = calificacion2[calificacion2["clean"].notnull()]
+    resto = calificacion2.copy()
+    acumulador = {}
+    for i in listaCalificacion:
+        aux = resto[resto["clean"].apply(lambda x: all(word in x for word in i.split()))]
+        resto = resto[resto["clean"].apply(lambda x: not all(word in x for word in i.split()))]
+        aux["key"] = i
+        acumulador[i] = aux.copy()
+        if(len(resto) == 0):
+            break
+    calificacionClave = pd.concat([acumulador[x] for x in acumulador.keys()])
+    merge = calificacionClave.merge(df, on="clean", how="right")
+    #dfMerge = df.merge(merge, on="tipo_calificacionp",how="left")
+    #dfMergeFinal = dfMerge.merge(refFinal, on="key" , how="left")
+    dfMergeFinal = merge.merge(refFinal, on="key" , how="left")
+    print(df.shape,dfMergeFinal.shape)
+    return dfMergeFinal
+
+def calificacion_nivel_2(df):
+    lista_homologado_original = list(hologado22["Homologado"].unique())
+    acumuladoDF_homologado = df[df["Homologado"].apply(lambda x: x in lista_homologado_original)]
+    acumuladoDF_no_homologado = df[df["Homologado"].apply(lambda x: x not in lista_homologado_original)]
+    acumulador = []
+    acumulador_resto = []
+    for i in hologado22["Homologado"].unique():
+        aux = acumuladoDF_homologado[acumuladoDF_homologado["Homologado"] == i]
+        auxaux = hologado22[hologado22["Homologado"] == i]
+        lista_homologado2 = list(auxaux["key"].unique())
+        resto = aux.copy()
+        if(aux.shape[0] > 0):
+            for j in lista_homologado2:
+                aux = resto[resto["clean"].apply(lambda x: all(word in x for word in j.split()))]
+                resto = resto[resto["clean"].apply(lambda x: not all(word in x for word in j.split()))]
+                aux["key2"] = j
+                acumulador.append(aux.copy())
+                if(resto.shape[0] == 0):
+                    break
+        acumulador_resto.append(resto.copy())
+    df_resto = pd.concat(acumulador_resto)
+    acumuladoDF = pd.concat(acumulador)
+    df_final = pd.concat([acumuladoDF,df_resto])
+    hologado2_x.columns = ['key2', 'Homologado', 'Homologado 2']
+    hologado2_x2 = hologado2_x.drop_duplicates()
+    df_final_merge = df_final.merge(hologado2_x2, how="left")
+    final = pd.concat([df_final_merge,acumuladoDF_no_homologado])
+    final["Homologado"] = final["Homologado"].fillna("Sin Clasificar")
+    final["Homologado 2"] = final["Homologado 2"].fillna("Sin Clasificar")
+    return final
+
+
 if __name__ == '__main__':
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     for i in comunas:
@@ -130,7 +195,10 @@ if __name__ == '__main__':
         url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
         df = pd.read_csv(url, compression='xz', sep='\t')
         df = get_nombre_completo(df)
-        #df = getPagos(df)
+        df = rutificador(df)
+        df = getPagos(df)
+        df = calificacion_nivel_1(df)
+        df = calificacion_nivel_2(df)
         df.to_excel(f"test/{i}.xlsx", index=False)
         #print(url)
         #print(df2)
