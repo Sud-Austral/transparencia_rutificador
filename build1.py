@@ -15,11 +15,12 @@ import requests
 from collections import Counter
 from itertools import permutations
 
-def string_to_url(s):
-    return urllib.parse.quote(s)
+
 
 base = "https://www.cplt.cl/transparencia_activa/datoabierto/archivos/"
 deseadas =["Nombres","Paterno","Materno","organismo_nombre",'anyo', 'Mes','tipo_calificacionp']
+
+pattern_maximo = r'^90.{6}$'
 
 
 TA_PersonalPlanta                       = f"{base}TA_PersonalPlanta.csv"
@@ -60,6 +61,28 @@ comunas = ['Corporación Municipal de Providencia',
  'Municipalidad de Valparaíso',
  'Municipalidad de Viña del Mar',
  'Municipalidad de Ñuñoa']
+
+def string_to_url(s):
+    return urllib.parse.quote(s)
+
+def eliminar_espacios_adicionales(cadena):
+    if(type(cadena) == float):
+        return "NO"
+    return re.sub(r'\s+', ' ', cadena).strip()
+
+def transformar_string(texto):
+    # Convertir a mayúsculas
+    texto = texto.upper()
+    # Reemplazar tildes por letras sin tilde
+    texto = texto.replace('Á', 'A').replace('É', 'E').replace('Í', 'I').replace('Ó', 'O').replace('Ú', 'U')
+    # Reemplazar la letra "ñ" por "n"
+    texto = texto.replace('Ñ', 'N')
+    return texto
+
+def limpiar_texto(texto):
+    # Eliminar caracteres no deseados y convertir a mayúsculas
+    texto_limpio = re.sub(r'[^A-Z ]', '', texto.upper())
+    return texto_limpio
 
 def get_nombre_completo(df):
     df["Nombres2"] = df["Nombres"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
