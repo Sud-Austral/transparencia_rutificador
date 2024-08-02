@@ -29,9 +29,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt 
         #python test.py
-        wget https://www.cplt.cl/transparencia_activa/datoabierto/archivos/TA_PersonalPlanta.csv > /dev/null
-        rm TA_PersonalPlanta.csv
-        #python build1.py
+        python build1.py
         echo Hola2 > saludo.txt
 
 
