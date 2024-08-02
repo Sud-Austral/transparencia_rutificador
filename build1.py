@@ -130,7 +130,7 @@ if __name__ == '__main__':
         url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
         df = pd.read_csv(url, compression='xz', sep='\t')
         df = get_nombre_completo(df)
-        df = getPagos(df)
+        #df = getPagos(df)
         df.to_excel(f"test/{i}.xlsx", index=False)
         #print(url)
         #print(df2)
