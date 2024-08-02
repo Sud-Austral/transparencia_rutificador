@@ -1,5 +1,19 @@
 import pandas as pd
 import urllib.parse
+import pandas as pd
+import re
+from thefuzz import fuzz
+from thefuzz import process
+import pickle
+import numpy as np
+from functools import lru_cache
+from datetime import datetime
+import os
+import time
+import tarfile
+import requests
+from collections import Counter
+from itertools import permutations
 
 def string_to_url(s):
     return urllib.parse.quote(s)
@@ -47,6 +61,15 @@ comunas = ['Corporación Municipal de Providencia',
  'Municipalidad de Viña del Mar',
  'Municipalidad de Ñuñoa']
 
+def get_nombre_completo(df):
+    df["Nombres2"] = df["Nombres"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
+    df["Paterno2"] = df["Paterno"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
+    df["Materno2"] = df["Materno"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
+    df["NombreCompleto"] = df[['Paterno2', 'Materno2','Nombres2',]].apply(
+            lambda row: ' '.join(row.dropna().astype(str)).strip(), axis=1
+        )
+    return df
+
 
 
 if __name__ == '__main__':
@@ -56,5 +79,6 @@ if __name__ == '__main__':
         base = string_to_url(i)
         url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
         df = pd.read_csv(url, compression='xz', sep='\t')
+        df2 = get_nombre_completo(df)
         print(url)
-        print(df)
+        print(df2)
