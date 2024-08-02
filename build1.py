@@ -30,6 +30,7 @@ refFinal = ref[["key","Homologado"]]
 
 hologado2 = pd.read_excel(r"homologa2 (1).xlsx", sheet_name="homologa2", skiprows=2)
 hologado22 = hologado2[["Homologado","key","Secuencia"]].sort_values("Secuencia")
+hologado2_x = hologado2[["key","Homologado","Homologado 2"]]
 
 TA_PersonalPlanta                       = f"{base}TA_PersonalPlanta.csv"
 TA_PersonalContrata                     = f"{base}TA_PersonalContrata.csv"
