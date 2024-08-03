@@ -22,6 +22,7 @@ deseadas =["Nombres","Paterno","Materno","organismo_nombre",'anyo', 'Mes','tipo_
 
 pattern_maximo = r'^90.{6}$'
 DB_RUT = pd.read_csv("ENCONTRADOS_10.csv", compression='xz', sep='\t')
+DB_SERVEL = pd.concat([pd.read_csv("RUT1.csv", compression='xz', sep='\t'),pd.read_csv("RUT2.csv", compression='xz', sep='\t')])
 ref = pd.read_excel(r"calificacion_key3 (7).xlsx", sheet_name="MATRIZ", skiprows=2)
 ref2 = ref[["key","Secuencia"]]
 ref3 = ref2.sort_values(by="Secuencia")
@@ -71,6 +72,12 @@ comunas = ['Corporación Municipal de Providencia',
  'Municipalidad de Viña del Mar',
  'Municipalidad de Ñuñoa']
 
+
+exclusion_list = ["NO", "DEL", "DE", "SAN","A","LA","HONORARIOS","LAS","TRABAJO","CODIGO","ASISTENTE","EDUCACION","C","SIN","DOCENTE","APELLIDO", "Y",'M',"E"]
+
+def getSimilitud(name1,name2):
+    return fuzz.ratio(name1, name2)
+
 def string_to_url(s):
     return urllib.parse.quote(s)
 
@@ -81,7 +88,7 @@ def fixRemuneracion(valor):
         None
 
 def eliminar_espacios_adicionales(cadena):
-    if(type(cadena) == float):
+     if isinstance(cadena, float):
         return "NO"
     return re.sub(r'\s+', ' ', cadena).strip()
 
@@ -99,9 +106,7 @@ def limpiar_texto(texto):
     texto_limpio = re.sub(r'[^A-Z ]', '', texto.upper())
     return texto_limpio
 
-def rutificador(df):
-    merge = df.merge(DB_RUT, left_on="NombreCompleto",right_on="NombreCompleto",how="left")
-    return merge
+
 
 def get_nombre_completo(df):
     df["Nombres2"] = df["Nombres"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
@@ -112,10 +117,66 @@ def get_nombre_completo(df):
         )
     return df
 
+def buscar_rut(df):
+    merge2 = df[df["rut"].isnull()]
+    problematico = merge2[["NombreCompleto"]].drop_duplicates()
+    problematico_x = problematico.merge(DB_SERVEL,left_on="NombreCompleto",right_on="Nombre_merge",how="left")
+    df_si = problematico_x[problematico_x["Nombre_merge"].notnull()]
+    problematico_x2 = problematico_x[problematico_x["Nombre_merge"].isnull()]
+    problematico_x3 = problematico_x2[["NombreCompleto"]].sort_values("NombreCompleto")
+    diccionarioAcumulador = {}
+    resto = problematico_x3.copy()
+    while resto.shape[0] > 0:
+        all_text = " ".join(resto["NombreCompleto"].dropna().to_list())
+        words = all_text.split()
+        filtered_words = [word for word in words if word not in exclusion_list]
+        word_counts = Counter(filtered_words)
+        most_common_words = word_counts.most_common(1)
+        #unique_word
+        i = [x[0] for x in most_common_words][0]
+        result = resto["NombreCompleto"].str.contains(i)
+        diccionarioAcumulador[i] = resto[result]
+        resto = resto[~result]
+    pattern = '|'.join(list(diccionarioAcumulador.keys()))
+    datos6 = DB_SERVEL[DB_SERVEL['Nombre_merge'].str.contains(pattern, case=True, na=False)]  
+    lista_palabras = list(diccionarioAcumulador.keys())
+
+    def encontrar_nombre_similar(row,lista):
+        print(row, end="\r")
+        try:
+            nombre = row
+            #similaridades = [(getSimilitud(nombre, y), y) for y in lista]
+            similaridades = [(fuzz.token_sort_ratio(nombre, y), y) for y in lista] +  [(getSimilitud(nombre, y), y) for y in lista] +[(fuzz.ratio(nombre, y), y) for y in lista] + [(fuzz.partial_ratio(nombre, y), y) for y in lista] + [(fuzz.UQRatio(nombre, y), y) for y in lista]+ [(fuzz.QRatio(nombre, y), y) for y in lista]
+            similaridad_maxima, nombre_mas_similar = max(similaridades, key=lambda x: x[0])
+            return pd.Series([similaridad_maxima, nombre_mas_similar])
+        except:
+            print(f"Error en {nombre}")
+            return pd.Series([None, None])
+
+    acumulador = []
+    #for i in unique_word:
+    for i in lista_palabras:
+        print(f"\n{i}")
+        ref = datos6[datos6['Nombre_merge'].str.contains(i, case=True, na=False)]["Nombre_merge"]
+        aux = diccionarioAcumulador[i]
+        aux[["probabilidad","nombre"]] = aux["NombreCompleto"].apply(lambda x: encontrar_nombre_similar(x,ref))
+        acumulador.append(aux.copy())
+    salida = pd.concat(acumulador)
+    valor = 85
+    #result = (salida.probabilidad>=valor)|(salida.p1>=valor)|(salida.p2>=valor)|(salida.p3>=valor)|(salida.p4>=valor)|(salida.p5>=valor)
+    result = (salida.probabilidad >= valor)
+    salida[result]
+    return None
+
+
+
+def rutificador(df):
+    merge = df.merge(DB_RUT, on="NombreCompleto",how="left")
+    return merge
+
 def getPagos(df):    
     """
-    Process payments data from an Excel file and save the results to a new file.
-    
+    Process payments data from an Excel file and save the results to a new file.    
     Parameters:
     URL (str): The file path of the Excel file to process.
     input_dir (str): The directory name in the input file path to replace (default is "organismoSalida2").
@@ -199,7 +260,7 @@ def process_comuna(comuna):
         # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
         df = rutificador(df)
-        #df = getPagos(df)
+        df = getPagos(df)
         #df = calificacion_nivel_1(df)
         #df = calificacion_nivel_2(df)
         
@@ -211,6 +272,7 @@ def process_comuna(comuna):
 if __name__ == '__main__':
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     for comuna in comunas:
+        print(comuna)
         process_comuna(comuna)
         #print(url)
         #print(df2)
