@@ -88,7 +88,7 @@ def fixRemuneracion(valor):
         None
 
 def eliminar_espacios_adicionales(cadena):
-     if isinstance(cadena, float):
+    if isinstance(cadena, float):
         return "NO"
     return re.sub(r'\s+', ' ', cadena).strip()
 
