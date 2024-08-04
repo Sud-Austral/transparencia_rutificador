@@ -260,7 +260,7 @@ def process_comuna(comuna):
         # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
         df = rutificador(df)
-        df = getPagos(df)
+        #df = getPagos(df)
         #df = calificacion_nivel_1(df)
         #df = calificacion_nivel_2(df)
         
