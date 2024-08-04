@@ -30,7 +30,38 @@ jobs:
         pip install -r requirements.txt 
         #python test.py
         python build1.py
-        echo Hola2 > saludo.txt
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: shared-files1
+        path: |
+          test
+
+  build2:
+    runs-on: ubuntu-latest
+    needs: [build1]
+    strategy:
+      matrix:
+        python-version: [3.7]
+    steps:
+    - name: Checkout del repositorio
+      uses: actions/checkout@v2
+
+    - name: Configurar Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - name: Download artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: shared-files1
+        path: test
+    - name: AUTOMATIZACIÓN
+      run: |
+        echo "Vamos a lo importante...1"    
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt 
+        python build2.py
 
 
     - name: Commit y push cambios
