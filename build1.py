@@ -252,37 +252,44 @@ def calificacion_nivel_2(df):
      # Dividir el DataFrame en homologado y no homologado de una vez
     is_homologado = df["Homologado"].isin(lista_homologado_original)
     acumuladoDF_homologado = df[is_homologado]
-    acumuladoDF_no_homologado = df[~is_homologado]
-    
-    
+    acumuladoDF_no_homologado = df[~is_homologado]   
+
     acumulador = []
     acumulador_resto = []
     #for i in hologado22["Homologado"].unique():
+
     for i in lista_homologado_original:
         aux = acumuladoDF_homologado[acumuladoDF_homologado["Homologado"] == i]
         auxaux = hologado22[hologado22["Homologado"] == i]
         lista_homologado2 = list(auxaux["key"].unique())
-        resto = aux.copy()
+        #resto = aux.copy()
 
         if(aux.shape[0] > 0):
             for j in lista_homologado2:
                 #aux = resto[resto["clean"].apply(lambda x: all(word in x for word in j.split()))]
                 #resto = resto[resto["clean"].apply(lambda x: not all(word in x for word in j.split()))]
-                mask = resto["clean"].apply(lambda x: all(word in x for word in j.split()))
-                aux = resto[mask]
-                resto = resto[~mask]
-                aux["key2"] = j
-                acumulador.append(aux)
-                if resto.empty:
+                #mask = resto["clean"].apply(lambda x: all(word in x for word in j.split()))
+                mask = aux["clean"].apply(lambda x: all(word in x for word in j.split()))
+                aux_subset = aux[mask]
+                aux_subset["key2"] = j
+                acumulador.append(aux_subset)
+                aux = aux[~mask]
+                #aux = resto[mask]
+                #resto = resto[~mask]
+                #aux["key2"] = j
+                #aux_subset["key2"] = j
+                #acumulador.append(aux)
+                if aux.empty:
                     break
 
         acumulador_resto.append(resto.copy())
-    df_resto = pd.concat(acumulador_resto)
-    acumuladoDF = pd.concat(acumulador)
-    df_final = pd.concat([acumuladoDF,df_resto])    
+
+    df_resto = pd.concat(acumulador_resto, ignore_index=True)
+    acumuladoDF = pd.concat(acumulador, ignore_index=True)
+    df_final = pd.concat([acumuladoDF,df_resto], ignore_index=True)    
 
     df_final_merge = df_final.merge(hologado2_x2, how="left")
-    final = pd.concat([df_final_merge,acumuladoDF_no_homologado])
+    final = pd.concat([df_final_merge,acumuladoDF_no_homologado], ignore_index=True)
     
     final["Homologado"] = final["Homologado"].fillna("Sin Clasificar")
     final["Homologado 2"] = final["Homologado 2"].fillna("Sin Clasificar")
