@@ -317,7 +317,7 @@ def process_comuna(comuna):
 
 if __name__ == '__main__':
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
-    for comuna in comunas[18:]:
+    for comuna in comunas[22:]:
         print(comuna)
         print(len(comunas))
         result = process_comuna(comuna)
