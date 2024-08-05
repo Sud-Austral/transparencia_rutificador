@@ -305,9 +305,9 @@ def process_comuna(comuna):
         df = calificacion_nivel_2(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
        'Tipo cargo', 'remuneracionbruta_mensual', 'remuliquida_mensual',
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
-       'Nombre_merge', 'año-mes-rut', 'Cantidad de pagos en un mes',
-       'año-mes-rut-base', 'Detalle de base en pagos en un mes',
-       'Tipo de contrato distintos', 'Homologado',  'Homologado 2']]
+       'Nombre_merge', 'Cantidad de pagos en un mes',
+        'Detalle de base en pagos en un mes',
+       'Tipo de contrato distintos', 'Homologado',  'Homologado 2','key']]
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #Guardar el DataFrame procesado en un archivo Excel
         df.to_excel(f"test/{comuna}.xlsx", index=False)
