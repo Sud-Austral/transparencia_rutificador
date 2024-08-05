@@ -316,7 +316,7 @@ def process_comuna(comuna):
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
        'Nombre_merge', 'Cantidad de pagos en un mes',
         'Detalle de base en pagos en un mes',
-       'Tipo de contrato distintos', 'Homologado','key']]
+       'Tipo de contrato distintos', 'Homologado','key',"clean"]]
         
         df = calificacion_nivel_2(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
        'Tipo cargo', 'remuneracionbruta_mensual', 'remuliquida_mensual',
