@@ -318,7 +318,7 @@ def process_comuna(comuna):
 
 if __name__ == '__main__':
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
-    for comuna in comunas[:4]:
+    for comuna in comunas[:]:
         print(comuna)
         result = process_comuna(comuna)
         # Eliminar la variable que contiene los datos grandes para liberar memoria
