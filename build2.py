@@ -32,6 +32,10 @@ refFinal = ref[["key","Homologado"]]
 hologado2 = pd.read_excel(r"homologa2 (1).xlsx", sheet_name="homologa2", skiprows=2)
 hologado22 = hologado2[["Homologado","key","Secuencia"]].sort_values("Secuencia")
 hologado2_x = hologado2[["key","Homologado","Homologado 2"]]
+lista_homologado_original = list(hologado22["Homologado"].unique())
+# Preparar el DataFrame de homologaciones para el merge
+hologado2_x.columns = ['key2', 'Homologado', 'Homologado 2']
+hologado2_x2 = hologado2_x.drop_duplicates()
 
 TA_PersonalPlanta                       = f"{base}TA_PersonalPlanta.csv"
 TA_PersonalContrata                     = f"{base}TA_PersonalContrata.csv"
@@ -181,7 +185,7 @@ def getPagos(df):
     URL (str): The file path of the Excel file to process.
     input_dir (str): The directory name in the input file path to replace (default is "organismoSalida2").
     output_dir (str): The directory name in the output file path to replace (default is "organismoSalida3").
-    """
+    
     result = df[['anyo', 'Mes','rut']].apply(lambda row: '-'.join(row.values.astype(str)), axis=1)
     df["año-mes-rut"] = result
     resultados = pd.DataFrame(result.value_counts()).reset_index().rename(columns={'count':'Cantidad de pagos en un mes',0: 'Cantidad de pagos en un mes',"index":"año-mes-rut"})
@@ -194,79 +198,120 @@ def getPagos(df):
     distinct_counts.columns = ["año-mes-rut", "Tipo de contrato distintos"]
     df2 = df2.merge(distinct_counts)    
     df2['remuliquida_mensual'] = df2['remuliquida_mensual'].map(fixRemuneracion)
-    df2['remuneracionbruta_mensual'] = df2['remuneracionbruta_mensual'].map(fixRemuneracion)
+    df2['remuneracionbruta_mensual'] = df2['remuneracionbruta_mensual'].map(fixRemuneracion)   
+
     return df2
+    """
+    df["año-mes-rut"] = df[['anyo', 'Mes', 'rut']].astype(str).agg('-'.join, axis=1)
+    count_pagos_mes = df["año-mes-rut"].value_counts().rename('Cantidad de pagos en un mes')
+    df = df.join(count_pagos_mes, on="año-mes-rut")
+
+    df["año-mes-rut-base"] = df[['año-mes-rut', 'base']].astype(str).agg('-'.join, axis=1)
+    detalle_base_pagos_mes = df["año-mes-rut-base"].value_counts().rename('Detalle de base en pagos en un mes')
+    df = df.join(detalle_base_pagos_mes, on="año-mes-rut-base")
+
+    tipo_contrato_distintos = df.groupby("año-mes-rut")["año-mes-rut-base"].nunique().rename("Tipo de contrato distintos")
+    df = df.join(tipo_contrato_distintos, on="año-mes-rut")
+
+    df['remuliquida_mensual'] = df['remuliquida_mensual'].map(fixRemuneracion)
+    df['remuneracionbruta_mensual'] = df['remuneracionbruta_mensual'].map(fixRemuneracion)
+    
+    return df
 
 def calificacion_nivel_1(df):
     df["clean"] = df["tipo_calificacionp"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
-    calificacion2 = df[["clean"]].drop_duplicates()
-    calificacion2 = calificacion2[calificacion2["clean"].notnull()]
+    calificacion2 = df[["clean"]].drop_duplicates().dropna()
+    #calificacion2 = calificacion2[calificacion2["clean"].notnull()]
     resto = calificacion2.copy()
     acumulador = {}
     for i in listaCalificacion:
-        aux = resto[resto["clean"].apply(lambda x: all(word in x for word in i.split()))]
-        resto = resto[resto["clean"].apply(lambda x: not all(word in x for word in i.split()))]
+        #aux = resto[resto["clean"].apply(lambda x: all(word in x for word in i.split()))]
+        #resto = resto[resto["clean"].apply(lambda x: not all(word in x for word in i.split()))]
+        mask = resto["clean"].apply(lambda x: all(word in x for word in i.split()))
+        aux = resto[mask]
+        resto = resto[~mask]
+
+        #aux = aux.to_frame()
         aux["key"] = i
         acumulador[i] = aux.copy()
-        if(len(resto) == 0):
+        if resto.empty:
             break
-    calificacionClave = pd.concat([acumulador[x] for x in acumulador.keys()])
+    #calificacionClave = pd.concat([acumulador[x] for x in acumulador.keys()])
+    calificacionClave = pd.concat(acumulador.values())
     merge = calificacionClave.merge(df, on="clean", how="right")
     #dfMerge = df.merge(merge, on="tipo_calificacionp",how="left")
     #dfMergeFinal = dfMerge.merge(refFinal, on="key" , how="left")
     dfMergeFinal = merge.merge(refFinal, on="key" , how="left")
-    print(df.shape,dfMergeFinal.shape)
+    
     return dfMergeFinal
 
-def calificacion_nivel_2(df):
-    lista_homologado_original = list(hologado22["Homologado"].unique())
-    acumuladoDF_homologado = df[df["Homologado"].apply(lambda x: x in lista_homologado_original)]
-    acumuladoDF_no_homologado = df[df["Homologado"].apply(lambda x: x not in lista_homologado_original)]
+def calificacion_nivel_2(df):    
+    #acumuladoDF_homologado = df[df["Homologado"].apply(lambda x: x in lista_homologado_original)]
+    #acumuladoDF_no_homologado = df[df["Homologado"].apply(lambda x: x not in lista_homologado_original)]
+     # Dividir el DataFrame en homologado y no homologado de una vez
+    is_homologado = df["Homologado"].isin(lista_homologado_original)
+    acumuladoDF_homologado = df[is_homologado]
+    acumuladoDF_no_homologado = df[~is_homologado]
+    
+    
     acumulador = []
     acumulador_resto = []
-    for i in hologado22["Homologado"].unique():
+    #for i in hologado22["Homologado"].unique():
+    for i in lista_homologado_original:
         aux = acumuladoDF_homologado[acumuladoDF_homologado["Homologado"] == i]
         auxaux = hologado22[hologado22["Homologado"] == i]
         lista_homologado2 = list(auxaux["key"].unique())
         resto = aux.copy()
+
         if(aux.shape[0] > 0):
             for j in lista_homologado2:
-                aux = resto[resto["clean"].apply(lambda x: all(word in x for word in j.split()))]
-                resto = resto[resto["clean"].apply(lambda x: not all(word in x for word in j.split()))]
+                #aux = resto[resto["clean"].apply(lambda x: all(word in x for word in j.split()))]
+                #resto = resto[resto["clean"].apply(lambda x: not all(word in x for word in j.split()))]
+                mask = resto["clean"].apply(lambda x: all(word in x for word in j.split()))
+                aux = resto[mask]
+                resto = resto[~mask]
                 aux["key2"] = j
-                acumulador.append(aux.copy())
-                if(resto.shape[0] == 0):
+                acumulador.append(aux)
+                if resto.empty:
                     break
+
         acumulador_resto.append(resto.copy())
     df_resto = pd.concat(acumulador_resto)
     acumuladoDF = pd.concat(acumulador)
-    df_final = pd.concat([acumuladoDF,df_resto])
-    hologado2_x.columns = ['key2', 'Homologado', 'Homologado 2']
-    hologado2_x2 = hologado2_x.drop_duplicates()
+    df_final = pd.concat([acumuladoDF,df_resto])    
+
     df_final_merge = df_final.merge(hologado2_x2, how="left")
     final = pd.concat([df_final_merge,acumuladoDF_no_homologado])
+    
     final["Homologado"] = final["Homologado"].fillna("Sin Clasificar")
     final["Homologado 2"] = final["Homologado 2"].fillna("Sin Clasificar")
     return final
 
 def process_comuna(comuna):
-    #base = string_to_url(comuna)
-    #url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
-    url = f"test/{comuna}.xlsx"
+    base = string_to_url(comuna)
+    url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
+    print(url)
     try:
         # Leer el archivo CSV
-        #df = pd.read_csv(url, compression='xz', sep='\t')
-        df = pd.read_excel(url)
-        
+        df = pd.read_csv(url, compression='xz', sep='\t')
+        print(df.shape)
         # Procesar el DataFrame a través de las funciones específicas
-        #df = get_nombre_completo(df)
-        #df = rutificador(df)
+        df = get_nombre_completo(df)
+        df = rutificador(df)[['organismo_nombre', 'anyo', 'Mes', 
+       'tipo_calificacionp', 'Tipo cargo', 'remuneracionbruta_mensual',
+       'remuliquida_mensual', 'base', 'tipo_pago', 'num_cuotas','NombreCompleto', 'rut', 'Nombre_merge']]
         df = getPagos(df)
         df = calificacion_nivel_1(df)
-        df = calificacion_nivel_2(df)
-        
-        # Guardar el DataFrame procesado en un archivo Excel
+        df = calificacion_nivel_2(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
+       'Tipo cargo', 'remuneracionbruta_mensual', 'remuliquida_mensual',
+       'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
+       'Nombre_merge', 'año-mes-rut', 'Cantidad de pagos en un mes',
+       'año-mes-rut-base', 'Detalle de base en pagos en un mes',
+       'Tipo de contrato distintos', 'Homologado',  'Homologado 2']]
+        df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
+        #Guardar el DataFrame procesado en un archivo Excel
         df.to_excel(f"test/{comuna}.xlsx", index=False)
+        print(df.shape)
     except Exception as e:
         print(f"Error al procesar {comuna}: {e}")
 
@@ -274,6 +319,6 @@ if __name__ == '__main__':
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     for comuna in comunas[:3]:
         print(comuna)
-        process_comuna(comuna)
+        #process_comuna(comuna)
         #print(url)
         #print(df2)
