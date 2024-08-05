@@ -282,7 +282,8 @@ def calificacion_nivel_2(df):
                 if aux.empty:
                     break
 
-        acumulador_resto.append(resto.copy())
+        #acumulador_resto.append(resto.copy())
+        acumulador_resto.append(aux)
 
     df_resto = pd.concat(acumulador_resto, ignore_index=True)
     acumuladoDF = pd.concat(acumulador, ignore_index=True)
