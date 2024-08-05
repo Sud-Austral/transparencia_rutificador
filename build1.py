@@ -14,6 +14,7 @@ import tarfile
 import requests
 from collections import Counter
 from itertools import permutations
+import gc
 
 
 
@@ -317,8 +318,9 @@ def process_comuna(comuna):
 
 if __name__ == '__main__':
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
-    for comuna in comunas[:2]:
+    for comuna in comunas[:4]:
         print(comuna)
         process_comuna(comuna)
+        gc.collect()
         #print(url)
         #print(df2)
