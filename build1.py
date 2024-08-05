@@ -301,6 +301,7 @@ def process_comuna(comuna):
         df = rutificador(df)[['organismo_nombre', 'anyo', 'Mes', 
        'tipo_calificacionp', 'Tipo cargo', 'remuneracionbruta_mensual',
        'remuliquida_mensual', 'base', 'tipo_pago', 'num_cuotas','NombreCompleto', 'rut', 'Nombre_merge']]
+        """
         df = getPagos(df)
         df = calificacion_nivel_1(df)
         df = calificacion_nivel_2(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
@@ -312,6 +313,7 @@ def process_comuna(comuna):
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #Guardar el DataFrame procesado en un archivo Excel
         df.to_excel(f"test/{comuna}.xlsx", index=False)
+        """
         print(df.shape)
     except Exception as e:
         print(f"Error al procesar {comuna}: {e}")
