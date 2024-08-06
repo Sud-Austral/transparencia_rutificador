@@ -372,6 +372,7 @@ def process_comuna(comuna):
        'Tipo de contrato distintos', 'Homologado',  'Homologado 2','key']]
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         df["metodo"] = ""
+        
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
@@ -388,3 +389,7 @@ if __name__ == '__main__':
         gc.collect()
         #print(url)
         #print(df2)
+
+
+
+
