@@ -246,7 +246,8 @@ def calificacion_nivel_1(df):
     
     return dfMergeFinal
 
-def calificacion_nivel_2(df):    
+def calificacion_nivel_2(df):   
+    """ 
     #acumuladoDF_homologado = df[df["Homologado"].apply(lambda x: x in lista_homologado_original)]
     #acumuladoDF_no_homologado = df[df["Homologado"].apply(lambda x: x not in lista_homologado_original)]
      # Dividir el DataFrame en homologado y no homologado de una vez
@@ -261,15 +262,17 @@ def calificacion_nivel_2(df):
     for i in lista_homologado_original:
         aux = acumuladoDF_homologado[acumuladoDF_homologado["Homologado"] == i]
         auxaux = hologado22[hologado22["Homologado"] == i]
-        lista_homologado2 = list(auxaux["key"].unique())
+        lista_homologado2 = auxaux["key"].unique() #list(auxaux["key"].unique())
         #resto = aux.copy()
 
-        if(aux.shape[0] > 0):
+        #if(aux.shape[0] > 0):
+        if not aux.empty:
             for j in lista_homologado2:
                 #aux = resto[resto["clean"].apply(lambda x: all(word in x for word in j.split()))]
                 #resto = resto[resto["clean"].apply(lambda x: not all(word in x for word in j.split()))]
                 #mask = resto["clean"].apply(lambda x: all(word in x for word in j.split()))
-                mask = aux["clean"].apply(lambda x: all(word in x for word in j.split()))
+                #mask = aux["clean"].apply(lambda x: all(word in x for word in j.split()))
+                mask = aux["clean"].str.contains(' '.join(j.split()))
                 aux_subset = aux[mask]
                 aux_subset["key2"] = j
                 acumulador.append(aux_subset)
@@ -295,6 +298,43 @@ def calificacion_nivel_2(df):
     final["Homologado"] = final["Homologado"].fillna("Sin Clasificar")
     final["Homologado 2"] = final["Homologado 2"].fillna("Sin Clasificar")
     return final
+    """
+    is_homologado = df["Homologado"].isin(lista_homologado_original)
+    acumuladoDF_homologado = df[is_homologado]
+    acumuladoDF_no_homologado = df[~is_homologado]
+
+    acumulador = []
+    acumulador_resto = []
+
+    for i in lista_homologado_original:
+        aux = acumuladoDF_homologado[acumuladoDF_homologado["Homologado"] == i]
+        auxaux = hologado22[hologado22["Homologado"] == i]
+        lista_homologado2 = auxaux["key"].unique()
+        
+        if not aux.empty:
+            for j in lista_homologado2:
+                mask = aux["clean"].str.contains(' '.join(j.split()))
+                aux_subset = aux[mask].copy()
+                aux_subset["key2"] = j
+                acumulador.append(aux_subset)
+                aux = aux[~mask]
+                if aux.empty:
+                    break
+
+        acumulador_resto.append(aux)
+
+    df_resto = pd.concat(acumulador_resto, ignore_index=True)
+    acumuladoDF = pd.concat(acumulador, ignore_index=True)
+    df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
+
+    df_final_merge = df_final.merge(hologado2_x2, how="left")
+    final = pd.concat([df_final_merge, acumuladoDF_no_homologado], ignore_index=True)
+
+    final["Homologado"] = final["Homologado"].fillna("Sin Clasificar")
+    final["Homologado 2"] = final["Homologado 2"].fillna("Sin Clasificar")
+
+    return final
+
 
 def process_comuna(comuna):
     base = string_to_url(comuna)
