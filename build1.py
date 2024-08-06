@@ -374,7 +374,7 @@ def process_comuna(comuna):
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
-        df.csv(f"test/{comuna}.csv", index=False)
+        df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
         print(df.shape)
     except Exception as e:
         print(f"Error al procesar {comuna}: {e}")
