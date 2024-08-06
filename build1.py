@@ -348,7 +348,7 @@ def process_comuna(comuna):
 
     try:
         # Leer el archivo CSV
-        df = pd.read_csv(url, compression='xz', sep='\t').head(700000)
+        df = pd.read_csv(url, compression='xz', sep='\t').head(800000)
         print(df.shape)
         # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
