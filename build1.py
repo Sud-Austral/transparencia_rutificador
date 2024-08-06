@@ -323,8 +323,12 @@ def calificacion_nivel_2(df):
 
         acumulador_resto.append(aux)
 
-    df_resto = pd.concat(acumulador_resto, ignore_index=True)
-    acumuladoDF = pd.concat(acumulador, ignore_index=True)
+    #df_resto = pd.concat(acumulador_resto, ignore_index=True)
+    #acumuladoDF = pd.concat(acumulador, ignore_index=True)
+    #df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
+     # Utilizar generadores para la concatenación
+    df_resto = pd.concat((x for x in acumulador_resto), ignore_index=True)
+    acumuladoDF = pd.concat((x for x in acumulador), ignore_index=True)
     df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
 
     df_final_merge = df_final.merge(hologado2_x2, how="left")
