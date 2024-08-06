@@ -34,6 +34,5 @@ if __name__ == '__main__':
         print(comuna)
         pd.read_csv(f"test/{comuna}.csv",compression='xz', sep='\t').to_excel(f"test1/{comuna}.xlsx", index=False)
         # Eliminar la variable que contiene los datos grandes para liberar memoria
-        gc.collect()
         #print(url)
         #print(df2)

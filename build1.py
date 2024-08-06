@@ -349,7 +349,6 @@ def process_comuna(comuna):
     try:
         # Leer el archivo CSV
         df = pd.read_csv(url, compression='xz', sep='\t') #.head(800000)
-        print(df.shape)
         # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
         df = rutificador(df)[['organismo_nombre', 'anyo', 'Mes', 
@@ -375,7 +374,6 @@ def process_comuna(comuna):
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
-        print(df.shape)
     except Exception as e:
         print(f"Error al procesar {comuna}: {e}")
 
