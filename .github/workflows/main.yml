@@ -29,7 +29,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt 
         #python test.py
-        python build1.py
+        #python build1.py
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
