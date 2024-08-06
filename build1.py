@@ -327,8 +327,9 @@ def calificacion_nivel_2(df):
     #acumuladoDF = pd.concat(acumulador, ignore_index=True)
     #df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
      # Utilizar generadores para la concatenación
-    df_resto = pd.concat((x for x in acumulador_resto), ignore_index=True)
-    acumuladoDF = pd.concat((x for x in acumulador), ignore_index=True)
+    df_resto = pd.concat((x for x in acumulador_resto if not x.empty), ignore_index=True)
+    acumuladoDF = pd.concat((x for x in acumulador if not x.empty), ignore_index=True)
+    
     df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
 
     df_final_merge = df_final.merge(hologado2_x2, how="left")
@@ -344,9 +345,10 @@ def process_comuna(comuna):
     base = string_to_url(comuna)
     url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
     print(url)
+
     try:
         # Leer el archivo CSV
-        df = pd.read_csv(url, compression='xz', sep='\t')
+        df = pd.read_csv(url, compression='xz', sep='\t').head(500000)
         print(df.shape)
         # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
