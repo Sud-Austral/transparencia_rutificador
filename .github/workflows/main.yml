@@ -28,8 +28,7 @@ jobs:
         echo "Vamos a lo importante...1"    
         python -m pip install --upgrade pip
         pip install -r requirements.txt 
-        #python test.py
-        #python build1.py
+        python build1.py
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -63,7 +62,7 @@ jobs:
         echo "Vamos a lo importante...1"    
         python -m pip install --upgrade pip
         pip install -r requirements.txt 
-        
+
         python build2.py
 
 
