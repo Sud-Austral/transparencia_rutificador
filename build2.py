@@ -28,9 +28,6 @@ comunas = ['Corporación Municipal de Providencia',
  'Municipalidad de Viña del Mar',
  'Municipalidad de Ñuñoa']
 
-def get_name(): 
-        
-
 if __name__ == '__main__':
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     for comuna in comunas:
