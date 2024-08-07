@@ -32,7 +32,7 @@ if __name__ == '__main__':
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     for comuna in comunas:
         print(comuna)
-        pd.read_csv(f"test/{comuna}.csv",compression='xz', sep='\t').to_excel(f"organismoSalida2/{comuna}.xlsx", index=False)
+        pd.read_csv(f"test/{comuna}.csv",compression='xz', sep='\t').assign(metodo="").to_excel(f"organismoSalida2/{comuna}.xlsx", index=False)
         # Eliminar la variable que contiene los datos grandes para liberar memoria
         #print(url)
         #print(df2)
