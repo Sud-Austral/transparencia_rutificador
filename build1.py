@@ -22,7 +22,14 @@ base = "https://www.cplt.cl/transparencia_activa/datoabierto/archivos/"
 deseadas =["Nombres","Paterno","Materno","organismo_nombre",'anyo', 'Mes','tipo_calificacionp']
 
 pattern_maximo = r'^90.{6}$'
-DB_RUT = pd.read_csv("ENCONTRADOS_10.csv", compression='xz', sep='\t')
+#DB_RUT = pd.read_csv("ENCONTRADOS_10.csv", compression='xz', sep='\t')[['NombreCompleto', 'rut', 'Nombre_merge', 'Fecha']]
+aux_1 = pd.read_csv("ENCONTRADOS_11_1.csv",compression='xz', sep='\t')
+aux_2 = pd.read_csv("ENCONTRADOS_11_2.csv",compression='xz', sep='\t')
+DB_RUT_HISTORICO = pd.concat([aux_1,aux_2])
+DB_RUT = pd.concat([aux_1,aux_2])[['NombreCompleto', 'rut', 'Nombre_merge', 'Fecha']]
+
+DB_RUT["NombreCompleto"] = DB_RUT["NombreCompleto"].fillna("")
+DB_RUT["Nombre_merge"]   = DB_RUT["Nombre_merge"].fillna("")
 DB_SERVEL = pd.concat([pd.read_csv("RUT1.csv", compression='xz', sep='\t'),pd.read_csv("RUT2.csv", compression='xz', sep='\t')])
 ref = pd.read_excel(r"calificacion_key3 (7).xlsx", sheet_name="MATRIZ", skiprows=2)
 ref2 = ref[["key","Secuencia"]]
@@ -122,15 +129,44 @@ def get_nombre_completo(df):
         )
     return df
 
+def rutificar_problematico(df):
+    return df.merge(DB_SERVEL,left_on="nombre",right_on="Nombre_merge",how="left")[['NombreCompleto', 'RUN', 'DV', 'Nombre_merge']]
+
+def consolidar_rutificado(salida):
+    df_salida = rutificar_problematico(salida)
+    df_salida["rut"] = df_salida[['RUN', 'DV']].apply(
+            lambda row: '-'.join(row.dropna().astype(str)).strip().replace(".0",""), axis=1
+        )
+    return df_salida[["NombreCompleto","Nombre_merge","rut"]]
+
+def get_rut_maximo():
+    return int(DB_RUT[DB_RUT["rut"].apply(lambda x: "-" not in x)]["rut"].max())  
+
+def rutificar_no_encontrado(df):
+    df = df[["NombreCompleto"]]
+    rut_maximo = get_rut_maximo()
+    df["rut"] = [str(x) for x in range(rut_maximo+1,rut_maximo + 1 + len(df))]
+    return df
+
+def save_new_rut(encontrado,no_encontrados):
+    final = pd.concat([consolidar_rutificado(encontrado),rutificar_no_encontrado(no_encontrados)])
+    final["Fecha"] = pd.to_datetime('today').normalize()
+    final["Fecha"] = pd.to_datetime(final["Fecha"]).dt.date
+    concat = pd.concat([DB_RUT_HISTORICO,final]) #.to_csv("ENCONTRADOS_intento.csv",index=False,compression='xz', sep='\t')
+    global DB_RUT
+    global DB_RUT_HISTORICO
+    DB_RUT_HISTORICO = concat 
+    DB_RUT = concat[['NombreCompleto', 'rut', 'Nombre_merge', 'Fecha']]
+    concat[:int(len(concat)/2)].to_csv("ENCONTRADOS_intento_1.csv",index=False,compression='xz', sep='\t')
+    concat[int(len(concat)/2):].to_csv("ENCONTRADOS_intento_2.csv",index=False,compression='xz', sep='\t')
+    return final
+
 def buscar_rut(df):
     merge2 = df[df["rut"].isnull()]
-    problematico = merge2[["NombreCompleto"]].drop_duplicates()
-    problematico_x = problematico.merge(DB_SERVEL,left_on="NombreCompleto",right_on="Nombre_merge",how="left")
-    df_si = problematico_x[problematico_x["Nombre_merge"].notnull()]
-    problematico_x2 = problematico_x[problematico_x["Nombre_merge"].isnull()]
-    problematico_x3 = problematico_x2[["NombreCompleto"]].sort_values("NombreCompleto")
+    problematico = merge2[["NombreCompleto"]].drop_duplicates().sort_values("NombreCompleto")
+       
     diccionarioAcumulador = {}
-    resto = problematico_x3.copy()
+    resto = problematico.copy()
     while resto.shape[0] > 0:
         all_text = " ".join(resto["NombreCompleto"].dropna().to_list())
         words = all_text.split()
@@ -144,14 +180,15 @@ def buscar_rut(df):
         resto = resto[~result]
     pattern = '|'.join(list(diccionarioAcumulador.keys()))
     datos6 = DB_SERVEL[DB_SERVEL['Nombre_merge'].str.contains(pattern, case=True, na=False)]  
+    ##Aqui hay una salida
     lista_palabras = list(diccionarioAcumulador.keys())
-
+        
     def encontrar_nombre_similar(row,lista):
         print(row, end="\r")
         try:
             nombre = row
             #similaridades = [(getSimilitud(nombre, y), y) for y in lista]
-            similaridades = [(fuzz.token_sort_ratio(nombre, y), y) for y in lista] +  [(getSimilitud(nombre, y), y) for y in lista] +[(fuzz.ratio(nombre, y), y) for y in lista] + [(fuzz.partial_ratio(nombre, y), y) for y in lista] + [(fuzz.UQRatio(nombre, y), y) for y in lista]+ [(fuzz.QRatio(nombre, y), y) for y in lista]
+            similaridades = [(fuzz.token_sort_ratio(nombre, y), y) for y in lista] +  [(fuzz.ratio(nombre, y), y) for y in lista] +[(fuzz.ratio(nombre, y), y) for y in lista] + [(fuzz.partial_ratio(nombre, y), y) for y in lista] + [(fuzz.UQRatio(nombre, y), y) for y in lista]+ [(fuzz.QRatio(nombre, y), y) for y in lista]
             similaridad_maxima, nombre_mas_similar = max(similaridades, key=lambda x: x[0])
             return pd.Series([similaridad_maxima, nombre_mas_similar])
         except:
@@ -166,17 +203,24 @@ def buscar_rut(df):
         aux = diccionarioAcumulador[i]
         aux[["probabilidad","nombre"]] = aux["NombreCompleto"].apply(lambda x: encontrar_nombre_similar(x,ref))
         acumulador.append(aux.copy())
+    
     salida = pd.concat(acumulador)
     valor = 85
     #result = (salida.probabilidad>=valor)|(salida.p1>=valor)|(salida.p2>=valor)|(salida.p3>=valor)|(salida.p4>=valor)|(salida.p5>=valor)
     result = (salida.probabilidad >= valor)
-    salida[result]
-    return None
-
+    valido = salida[result]
+    por_rutificar = salida[~result]
+    #save_new_rut(df_si,valido,no_encontrados)
+    salida = save_new_rut(valido,por_rutificar)
+    return salida
 
 
 def rutificador(df):
     merge = df.merge(DB_RUT, on="NombreCompleto",how="left")
+    merge2 = merge[merge["rut"].isnull()]
+    if(merge2.empty):
+        buscar_rut(merge)
+        merge = df.merge(DB_RUT, on="NombreCompleto",how="left")
     return merge
 
 def getPagos(df):    
