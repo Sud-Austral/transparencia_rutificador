@@ -219,7 +219,7 @@ def buscar_rut(df):
 def rutificador(df):
     merge = df.merge(DB_RUT, on="NombreCompleto",how="left")
     merge2 = merge[merge["rut"].isnull()]
-    if(merge2.empty):
+    if(~merge2.empty):
         buscar_rut(merge)
         merge = df.merge(DB_RUT, on="NombreCompleto",how="left")
     return merge
