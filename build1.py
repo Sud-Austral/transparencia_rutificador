@@ -149,12 +149,13 @@ def rutificar_no_encontrado(df):
     return df
 
 def save_new_rut(encontrado,no_encontrados):
+    global DB_RUT
+    global DB_RUT_HISTORICO
     final = pd.concat([consolidar_rutificado(encontrado),rutificar_no_encontrado(no_encontrados)])
     final["Fecha"] = pd.to_datetime('today').normalize()
     final["Fecha"] = pd.to_datetime(final["Fecha"]).dt.date
     concat = pd.concat([DB_RUT_HISTORICO,final]) #.to_csv("ENCONTRADOS_intento.csv",index=False,compression='xz', sep='\t')
-    global DB_RUT
-    global DB_RUT_HISTORICO
+    
     DB_RUT_HISTORICO = concat 
     DB_RUT = concat[['NombreCompleto', 'rut', 'Nombre_merge', 'Fecha']]
     concat[:int(len(concat)/2)].to_csv("ENCONTRADOS_intento_1.csv",index=False,compression='xz', sep='\t')
