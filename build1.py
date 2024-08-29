@@ -185,7 +185,7 @@ def buscar_rut(df):
     lista_palabras = list(diccionarioAcumulador.keys())
         
     def encontrar_nombre_similar(row,lista):
-        print(row, end="\r")
+        #print(row, end="\r")
         try:
             nombre = row
             #similaridades = [(getSimilitud(nombre, y), y) for y in lista]
@@ -199,7 +199,7 @@ def buscar_rut(df):
     acumulador = []
     #for i in unique_word:
     for i in lista_palabras:
-        print(f"\n{i}")
+        #print(f"\n{i}")
         ref = datos6[datos6['Nombre_merge'].str.contains(i, case=True, na=False)]["Nombre_merge"]
         aux = diccionarioAcumulador[i]
         aux[["probabilidad","nombre"]] = aux["NombreCompleto"].apply(lambda x: encontrar_nombre_similar(x,ref))
@@ -429,7 +429,6 @@ if __name__ == '__main__':
     for comuna in comunas[:]:
         print(comuna)
         result = process_comuna(comuna)
-        break
         # Eliminar la variable que contiene los datos grandes para liberar memoria
         del result
         gc.collect()
