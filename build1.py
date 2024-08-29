@@ -15,7 +15,7 @@ import requests
 from collections import Counter
 from itertools import permutations
 import gc
-
+import traceback
 
 
 base = "https://www.cplt.cl/transparencia_activa/datoabierto/archivos/"
@@ -163,9 +163,11 @@ def save_new_rut(encontrado,no_encontrados):
     return final
 
 def buscar_rut(df):
+    
     merge2 = df[df["rut"].isnull()]
+    print(merge2)
     problematico = merge2[["NombreCompleto"]].drop_duplicates().sort_values("NombreCompleto")
-       
+    print(problematico)
     diccionarioAcumulador = {}
     resto = problematico.copy()
     while resto.shape[0] > 0:
@@ -199,12 +201,13 @@ def buscar_rut(df):
     acumulador = []
     #for i in unique_word:
     for i in lista_palabras:
-        #print(f"\n{i}")
+        print(f"\n{i}")
         ref = datos6[datos6['Nombre_merge'].str.contains(i, case=True, na=False)]["Nombre_merge"]
         aux = diccionarioAcumulador[i]
         aux[["probabilidad","nombre"]] = aux["NombreCompleto"].apply(lambda x: encontrar_nombre_similar(x,ref))
         acumulador.append(aux.copy())
-    
+    print(lista_palabras)
+    print(acumulador)
     salida = pd.concat(acumulador)
     valor = 85
     #result = (salida.probabilidad>=valor)|(salida.p1>=valor)|(salida.p2>=valor)|(salida.p3>=valor)|(salida.p4>=valor)|(salida.p5>=valor)
@@ -219,7 +222,10 @@ def buscar_rut(df):
 def rutificador(df):
     merge = df.merge(DB_RUT, on="NombreCompleto",how="left")
     merge2 = merge[merge["rut"].isnull()]
-    if(~merge2.empty):
+    print(merge2)
+    print(merge2.empty)
+    if not merge2.empty:
+        print("esta entrando en rutificador")
         buscar_rut(merge)
         merge = df.merge(DB_RUT, on="NombreCompleto",how="left")
     return merge
@@ -393,29 +399,33 @@ def process_comuna(comuna):
 
     try:
         # Leer el archivo CSV
+        print(1)
         df = pd.read_csv(url, compression='xz', sep='\t') #.head(800000)
         # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
+        print(2)
         df = rutificador(df)[['organismo_nombre', 'anyo', 'Mes', 
        'tipo_calificacionp', 'Tipo cargo', 'remuneracionbruta_mensual',
        'remuliquida_mensual', 'base', 'tipo_pago', 'num_cuotas','NombreCompleto', 'rut', 'Nombre_merge']]
-        
+        print(3)
         df = getPagos(df)
-        
+        print(4)
         df = calificacion_nivel_1(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
        'Tipo cargo', 'remuneracionbruta_mensual', 'remuliquida_mensual',
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
        'Nombre_merge', 'Cantidad de pagos en un mes',
         'Detalle de base en pagos en un mes',
        'Tipo de contrato distintos', 'Homologado','key',"clean"]]
-        
+        print(5)
         df = calificacion_nivel_2(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
        'Tipo cargo', 'remuneracionbruta_mensual', 'remuliquida_mensual',
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
        'Nombre_merge', 'Cantidad de pagos en un mes',
         'Detalle de base en pagos en un mes',
        'Tipo de contrato distintos', 'Homologado',  'Homologado 2','key']]
+        print(6)
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
+        print(7)
         df["metodo"] = ""
         
         #Guardar el DataFrame procesado en un archivo Excel
@@ -423,6 +433,7 @@ def process_comuna(comuna):
         df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
     except Exception as e:
         print(f"Error al procesar {comuna}: {e}")
+        traceback.print_exc()
 
 if __name__ == '__main__':
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
