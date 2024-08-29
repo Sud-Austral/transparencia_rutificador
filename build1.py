@@ -429,6 +429,7 @@ if __name__ == '__main__':
     for comuna in comunas[:]:
         print(comuna)
         result = process_comuna(comuna)
+        break
         # Eliminar la variable que contiene los datos grandes para liberar memoria
         del result
         gc.collect()
