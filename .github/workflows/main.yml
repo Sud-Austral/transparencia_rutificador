@@ -6,7 +6,7 @@ on:
   push:
     branches: [ main ]
   schedule:
-    - cron:  '0 0 * * 6'
+    - cron:  '0 12 * * 6'
   #  At 00:00 on Saturday
 
 jobs:
@@ -35,8 +35,8 @@ jobs:
         name: shared-files1
         path: |
           test
-          ENCONTRADOS_intento_1.csv
-          ENCONTRADOS_intento_2.csv
+          ENCONTRADOS_11_1.csv
+          ENCONTRADOS_11_2.csv
   
   
 
