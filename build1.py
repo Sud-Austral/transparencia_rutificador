@@ -33,15 +33,18 @@ def save_dataframe_to_postgres(df, table_name, conn_params):
 
     # Crear un motor de SQLAlchemy
     engine = create_engine(conn_string)
-    df.to_sql(table_name, engine, if_exists='replace', index=False)
+    
 
 
     try:
         # Guardar el DataFrame en la tabla
-        
+        df.to_sql(table_name, engine, if_exists='replace', index=False)
         print(f"Datos guardados en la tabla '{table_name}' con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
+        error_traceback = traceback.format_exc()
+        print("Traceback detallado:")
+        print(error_traceback)
 
 # Ejemplo de uso
 conn_params = {
