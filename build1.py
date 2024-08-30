@@ -91,8 +91,10 @@ def crear_tabla_desde_dataframe(dataframe, nombre_tabla="tabla", db_name=db_name
         engine = create_engine(f'postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}')
 
         # Exportar el DataFrame a PostgreSQL
-        dataframe.to_sql(nombre_tabla, engine, if_exists='replace', index=False)
-        print(f"Tabla '{nombre_tabla}' creada exitosamente en la base de datos.")
+        with engine.connect() as connection:
+            dataframe.to_sql(nombre_tabla, con=connection, if_exists='replace', index=False)
+            print(f"Tabla '{nombre_tabla}' creada exitosamente en la base de datos.")
+        
     
     except Exception as e:
         print(f"Error al crear la tabla: {e}")
