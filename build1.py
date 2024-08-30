@@ -676,6 +676,7 @@ def process_comuna(comuna):
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
+        save_dataframe_to_postgres(df, 'tblPERSONA', conn_params)
     except Exception as e:
         print(f"Error al procesar {comuna}: {e}")
         error_traceback = traceback.format_exc()
@@ -683,25 +684,18 @@ def process_comuna(comuna):
         print(error_traceback)
 
 if __name__ == '__main__':
-    # Crear un DataFrame de ejemplo
-    data = {
-        'col1': [1, 2, 3],
-        'col2': ['A', 'B', 'C']
-    }
-    df = pd.DataFrame(data)
-    save_dataframe_to_postgres(df, 'mi_tabla2', conn_params)
 
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
-    """
+    
     for comuna in comunas[:]:
         print(comuna)
         result = process_comuna(comuna)
         # Eliminar la variable que contiene los datos grandes para liberar memoria
         del result
         gc.collect()
-
-    actualizar_DB_RUT()
-    """
+        break
+    #actualizar_DB_RUT()
+    
 
 
 
