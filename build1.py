@@ -676,7 +676,7 @@ def process_comuna(comuna):
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
-        save_dataframe_to_postgres(df, 'tblPERSONA', conn_params)
+        save_dataframe_to_postgres(df, 'personas', conn_params)
     except Exception as e:
         print(f"Error al procesar {comuna}: {e}")
         error_traceback = traceback.format_exc()
