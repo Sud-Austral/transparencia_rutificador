@@ -33,10 +33,12 @@ def save_dataframe_to_postgres(df, table_name, conn_params):
 
     # Crear un motor de SQLAlchemy
     engine = create_engine(conn_string)
+    df.to_sql(table_name, engine, if_exists='replace', index=False)
+    
 
     try:
         # Guardar el DataFrame en la tabla
-        df.to_sql(table_name, engine, if_exists='replace', index=False)
+        
         print(f"Datos guardados en la tabla '{table_name}' con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
@@ -658,7 +660,6 @@ def process_comuna(comuna):
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
-        print(df[df["rut"].isnull()].shape)
     except Exception as e:
         print(f"Error al procesar {comuna}: {e}")
         error_traceback = traceback.format_exc()
@@ -673,7 +674,7 @@ if __name__ == '__main__':
     }
     df = pd.DataFrame(data)
     save_dataframe_to_postgres(df, 'mi_tabla2', conn_params)
-    
+
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     """
     for comuna in comunas[:]:
