@@ -21,25 +21,22 @@ from psycopg2 import sql
 from sqlalchemy import create_engine
 
 def save_dataframe_to_postgres(df, table_name, conn_params):
-    """
-    Guarda un DataFrame en una tabla de PostgreSQL.
-
-    :param df: DataFrame de pandas que se desea guardar.
-    :param table_name: Nombre de la tabla en la base de datos.
-    :param conn_params: Diccionario con parámetros de conexión a la base de datos.
-    """
-    # Crear una cadena de conexión para SQLAlchemy
-    conn_string = f"postgresql+psycopg2://{conn_params['user']}:{conn_params['password']}@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}?sslmode={conn_params['sslmode']}"
-
-    # Crear un motor de SQLAlchemy
-    engine = create_engine(conn_string)
-    
-
-
     try:
-        # Guardar el DataFrame en la tabla
-        df.to_sql(table_name, engine, if_exists='replace', index=False)
-        print(f"Datos guardados en la tabla '{table_name}' con éxito.")
+        conn = psycopg2.connect(**conn_params)
+        print("Conexión exitosa")
+        
+        # Crea un cursor
+        cursor = conn.cursor()
+
+        # Realiza una consulta (opcional)
+        cursor.execute("SELECT version();")
+        db_version = cursor.fetchone()
+        print(f"Versión de la base de datos: {db_version[0]}")
+
+        # Cierra el cursor y la conexión
+        cursor.close()
+        conn.close()
+
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
         error_traceback = traceback.format_exc()
@@ -628,11 +625,17 @@ def process_comuna(comuna):
     base = string_to_url(comuna)
     url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
     print(url)
-
+    try:   
+        df = pd.read_csv(url, compression='xz', sep='\t', dtype=dtype_dict)
+    except Exception as e: 
+        df = pd.read_csv(url, compression='xz', sep='\t')
+    
     try:
         # Leer el archivo CSV
         #print(1)
-        df = pd.read_csv(url, compression='xz', sep='\t', dtype=dtype_dict) #.head(800000)
+        #df = pd.read_csv(url, compression='xz', sep='\t', dtype=dtype_dict) #.head(800000)
+        
+
         # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
         #print(2)
