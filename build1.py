@@ -38,7 +38,7 @@ def save_dataframe_to_postgres(df, table_name, conn_params):
         cursor.close()
         conn.close()
     """
-    conn_string = f"postgresql://{conn_params['user']}:{conn_params['password']}@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}?sslmode={conn_params['sslmode']}"
+    conn_string = f"postgresql://{conn_params['user']}:{conn_params['password']}@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}"
 
     try:
         # Crear un motor de SQLAlchemy
