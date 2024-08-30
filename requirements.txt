@@ -5,3 +5,4 @@ openpyxl==3.0.3
 wget
 thefuzz
 psycopg2
+sqlalchemy
