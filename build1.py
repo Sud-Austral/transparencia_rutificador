@@ -21,6 +21,7 @@ from psycopg2 import sql
 from sqlalchemy import create_engine
 
 def save_dataframe_to_postgres(df, table_name, conn_params):
+    """
     try:
         conn = psycopg2.connect(**conn_params)
         print("Conexión exitosa")
@@ -36,7 +37,16 @@ def save_dataframe_to_postgres(df, table_name, conn_params):
         # Cierra el cursor y la conexión
         cursor.close()
         conn.close()
+    """
+    conn_string = f"postgresql://{conn_params['user']}:{conn_params['password']}@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}?sslmode={conn_params['sslmode']}"
 
+    try:
+        # Crear un motor de SQLAlchemy
+        engine = create_engine(conn_string)
+
+        # Guardar el DataFrame en la tabla
+        df.to_sql(table_name, engine, if_exists='replace', index=False)
+        print(f"Datos guardados en la tabla '{table_name}' con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
         error_traceback = traceback.format_exc()
