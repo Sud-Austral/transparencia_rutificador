@@ -641,13 +641,6 @@ if __name__ == '__main__':
         gc.collect()
 
     actualizar_DB_RUT()
-    
-    for comuna in comunas[:]:
-        print(comuna)
-        result = process_comuna(comuna)
-        # Eliminar la variable que contiene los datos grandes para liberar memoria
-        del result
-        gc.collect()
 
 
 
