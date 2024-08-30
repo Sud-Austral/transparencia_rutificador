@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.11]
     steps:
     - name: Checkout del repositorio
       uses: actions/checkout@v2
@@ -22,7 +22,7 @@ jobs:
     - name: Configurar Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: 3.11
 
     - name: AUTOMATIZACIÓN
       run: |
@@ -38,7 +38,7 @@ jobs:
           test
           ENCONTRADOS_11_1.csv
           ENCONTRADOS_11_2.csv 
-          
+
   build2:
     runs-on: ubuntu-latest
     needs: [build1]
