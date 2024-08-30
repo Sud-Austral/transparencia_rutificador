@@ -20,116 +20,35 @@ import psycopg2
 from psycopg2 import sql
 from sqlalchemy import create_engine
 
-# Datos de conexión (ajustar según los valores en el flujo de trabajo)
-db_name = "mi_base_de_datos"
-db_user = "mi_usuario"
-db_password = "mi_password"
-db_host = "localhost"
-db_port = "5432"  # Puerto predeterminado de PostgreSQL
-
-def seleccionar_todo_desde_tabla(nombre_tabla, db_name, db_user, db_password, db_host='localhost', db_port='5432'):
+def save_dataframe_to_postgres(df, table_name, conn_params):
     """
-    Realiza un SELECT * FROM <nombre_tabla> y muestra el resultado.
-    
-    Parameters:
-    nombre_tabla (str): El nombre de la tabla desde la cual se realizará la consulta.
-    db_name (str): Nombre de la base de datos.
-    db_user (str): Usuario de la base de datos.
-    db_password (str): Contraseña del usuario de la base de datos.
-    db_host (str): Host de la base de datos (por defecto 'localhost').
-    db_port (str): Puerto de la base de datos (por defecto '5432').
+    Guarda un DataFrame en una tabla de PostgreSQL.
+
+    :param df: DataFrame de pandas que se desea guardar.
+    :param table_name: Nombre de la tabla en la base de datos.
+    :param conn_params: Diccionario con parámetros de conexión a la base de datos.
     """
-    
+    # Crear una cadena de conexión para SQLAlchemy
+    conn_string = f"postgresql://{conn_params['user']}:{conn_params['password']}@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}?sslmode={conn_params['sslmode']}"
+
+    # Crear un motor de SQLAlchemy
+    engine = create_engine(conn_string)
+
     try:
-        # Establecer la conexión con la base de datos
-        conexion = psycopg2.connect(
-            dbname=db_name,
-            user=db_user,
-            password=db_password,
-            host=db_host,
-            port=db_port
-        )
-        
-        # Crear un cursor para ejecutar la consulta
-        cursor = conexion.cursor()
-        
-        # Crear la consulta SQL
-        consulta = f"SELECT * FROM {nombre_tabla};"
-        
-        # Ejecutar la consulta
-        cursor.execute(consulta)
-        
-        # Obtener los resultados de la consulta
-        resultados = cursor.fetchall()
-        
-        # Imprimir los resultados
-        for fila in resultados:
-            print(fila)
-        
-        # Cerrar el cursor y la conexión
-        cursor.close()
-        conexion.close()
-
+        # Guardar el DataFrame en la tabla
+        df.to_sql(table_name, engine, if_exists='replace', index=False)
+        print(f"Datos guardados en la tabla '{table_name}' con éxito.")
     except Exception as e:
-        print(f"Error al realizar la consulta: {e}")
+        print(f"Ocurrió un error al guardar los datos: {e}")
 
-def crear_tabla_desde_dataframe(dataframe, nombre_tabla, db_name, db_user, db_password, db_host='localhost', db_port='5432'):
-    """
-    Crea una tabla en PostgreSQL con los datos de un DataFrame.
-    
-    Parameters:
-    dataframe (pd.DataFrame): El DataFrame con los datos a insertar.
-    nombre_tabla (str): El nombre de la tabla que se va a crear.
-    db_name (str): Nombre de la base de datos.
-    db_user (str): Usuario de la base de datos.
-    db_password (str): Contraseña del usuario de la base de datos.
-    db_host (str): Host de la base de datos (por defecto 'localhost').
-    db_port (str): Puerto de la base de datos (por defecto '5432').
-    """    
-    try:
-        # Crear el motor de conexión a PostgreSQL
-        engine = create_engine(f'postgresql+psycopg2://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}')
-
-        # Exportar el DataFrame a PostgreSQL
-        with engine.connect() as connection:
-            dataframe.to_sql(nombre_tabla, con=connection, if_exists='replace', index=False)
-            print(f"Tabla '{nombre_tabla}' creada exitosamente en la base de datos.")
-        
-    
-    except Exception as e:
-        print(f"Error al crear la tabla: {e}")
-    
-
-
-
-
-def check_db():
-    try:
-        # Establecer la conexión
-        conexion = psycopg2.connect(
-            dbname=db_name,
-            user=db_user,
-            password=db_password,
-            host=db_host,
-            port=db_port
-        )
-        
-        # Crear un cursor
-        cursor = conexion.cursor()
-
-        # Verificar la conexión ejecutando una consulta simple
-        cursor.execute("SELECT version();")
-        db_version = cursor.fetchone()
-        
-        print(f"Conectado a la base de datos PostgreSQL. Versión: {db_version}")
-
-        # Cerrar el cursor y la conexión
-        cursor.close()
-        conexion.close()
-
-    except Exception as e:
-        print(f"Error al conectar con PostgreSQL: {e}")
-    return None
+# Ejemplo de uso
+conn_params = {
+    'dbname': 'test',
+    'user': 'test_owner',
+    'password': 'lpPrcHty8i9V',
+    'host': 'ep-royal-glitter-a50h4o6a.us-east-2.aws.neon.tech',
+    'sslmode': 'require'
+}
 
 
 
@@ -747,15 +666,14 @@ def process_comuna(comuna):
         print(error_traceback)
 
 if __name__ == '__main__':
-    check_db()
+    # Crear un DataFrame de ejemplo
     data = {
-        'id': [1, 2, 3],
-        'nombre': ['Juan', 'Ana', 'Luis'],
-        'edad': [25, 30, 22]
-        }
+        'col1': [1, 2, 3],
+        'col2': ['A', 'B', 'C']
+    }
     df = pd.DataFrame(data)
-    crear_tabla_desde_dataframe(df,"tabla",db_name, db_user, db_password)
-    seleccionar_todo_desde_tabla("tabla", db_name, db_user, db_password)
+    save_dataframe_to_postgres(df, 'mi_tabla2', conn_params)
+    
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     """
     for comuna in comunas[:]:
