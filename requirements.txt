@@ -6,3 +6,4 @@ wget
 thefuzz
 psycopg2
 sqlalchemy
+psycopg2-binary
