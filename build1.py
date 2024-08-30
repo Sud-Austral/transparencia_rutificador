@@ -674,6 +674,7 @@ def process_comuna(comuna):
 if __name__ == '__main__':
     check_db()
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
+    """
     for comuna in comunas[:]:
         print(comuna)
         result = process_comuna(comuna)
@@ -682,6 +683,7 @@ if __name__ == '__main__':
         gc.collect()
 
     actualizar_DB_RUT()
+    """
 
 
 
