@@ -18,6 +18,46 @@ import traceback  # Para el manejo y formateo de excepciones
 #from functools import lru_cache
 
 
+import psycopg2
+from psycopg2 import sql
+
+# Datos de conexión (ajustar según los valores en el flujo de trabajo)
+db_name = "mi_base_de_datos"
+db_user = "mi_usuario"
+db_password = "mi_password"
+db_host = "localhost"
+db_port = "5432"  # Puerto predeterminado de PostgreSQL
+
+def check_db():
+    try:
+        # Establecer la conexión
+        conexion = psycopg2.connect(
+            dbname=db_name,
+            user=db_user,
+            password=db_password,
+            host=db_host,
+            port=db_port
+        )
+        
+        # Crear un cursor
+        cursor = conexion.cursor()
+
+        # Verificar la conexión ejecutando una consulta simple
+        cursor.execute("SELECT version();")
+        db_version = cursor.fetchone()
+        
+        print(f"Conectado a la base de datos PostgreSQL. Versión: {db_version}")
+
+        # Cerrar el cursor y la conexión
+        cursor.close()
+        conexion.close()
+
+    except Exception as e:
+        print(f"Error al conectar con PostgreSQL: {e}")
+    return None
+
+
+
 dtype_dict = {'organismo_nombre': 'object',
                 'anyo': 'float64',
                 'Mes': 'object',
@@ -632,6 +672,7 @@ def process_comuna(comuna):
         print(error_traceback)
 
 if __name__ == '__main__':
+    check_db()
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     for comuna in comunas[:]:
         print(comuna)
