@@ -27,7 +27,7 @@ db_password = "mi_password"
 db_host = "localhost"
 db_port = "5432"  # Puerto predeterminado de PostgreSQL
 
-def seleccionar_todo_desde_tabla(nombre_tabla="tabla", db_name=db_name, db_user=db_user, db_password=db_password, db_host='localhost', db_port='5432'):
+def seleccionar_todo_desde_tabla(nombre_tabla, db_name, db_user, db_password, db_host='localhost', db_port='5432'):
     """
     Realiza un SELECT * FROM <nombre_tabla> y muestra el resultado.
     
@@ -73,7 +73,7 @@ def seleccionar_todo_desde_tabla(nombre_tabla="tabla", db_name=db_name, db_user=
     except Exception as e:
         print(f"Error al realizar la consulta: {e}")
 
-def crear_tabla_desde_dataframe(dataframe, nombre_tabla="tabla", db_name=db_name, db_user=db_user, db_password=db_password, db_host='localhost', db_port='5432'):
+def crear_tabla_desde_dataframe(dataframe, nombre_tabla, db_name, db_user, db_password, db_host='localhost', db_port='5432'):
     """
     Crea una tabla en PostgreSQL con los datos de un DataFrame.
     
@@ -98,6 +98,7 @@ def crear_tabla_desde_dataframe(dataframe, nombre_tabla="tabla", db_name=db_name
     
     except Exception as e:
         print(f"Error al crear la tabla: {e}")
+    
 
 
 
@@ -753,8 +754,8 @@ if __name__ == '__main__':
         'edad': [25, 30, 22]
         }
     df = pd.DataFrame(data)
-    crear_tabla_desde_dataframe(df)
-    seleccionar_todo_desde_tabla()
+    crear_tabla_desde_dataframe(df,"tabla",db_name, db_user, db_password)
+    seleccionar_todo_desde_tabla("tabla", db_name, db_user, db_password)
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     """
     for comuna in comunas[:]:
