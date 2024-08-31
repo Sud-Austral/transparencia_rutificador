@@ -694,7 +694,7 @@ if __name__ == '__main__':
         del result
         gc.collect()
         break
-    #actualizar_DB_RUT()
+    actualizar_DB_RUT()
     
 
 
