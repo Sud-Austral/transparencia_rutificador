@@ -20,6 +20,40 @@ import psycopg2
 from psycopg2 import sql
 from sqlalchemy import create_engine
 
+def truncate_table_personal(db_config):
+    """
+    Esta función ejecuta el comando TRUNCATE en la tabla 'personal'.
+    
+    Parámetros:
+        db_config (dict): Un diccionario con la configuración de la base de datos.
+                          Debe contener las claves 'dbname', 'user', 'password', 'host', y 'port'.
+    """
+    try:
+        # Conectar a la base de datos
+        conn = psycopg2.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Comando SQL para truncar la tabla
+        truncate_query = sql.SQL("TRUNCATE TABLE personal")
+
+        # Ejecutar la consulta
+        cursor.execute(truncate_query)
+
+        # Confirmar la transacción
+        conn.commit()
+
+        print("La tabla 'personal' ha sido truncada exitosamente.")
+
+    except Exception as e:
+        print(f"Error al truncar la tabla: {e}")
+    
+    finally:
+        # Cerrar la conexión y el cursor
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 def save_dataframe_to_postgres(df, conn_params):
     """
     try:
@@ -65,7 +99,7 @@ def save_dataframe_to_postgres(df, conn_params):
                         'homologado_2',
                         'key',
                         'metodo']
-        df.to_sql("personal", engine, if_exists='append', index=False)
+        df.head(100).to_sql("personal", engine, if_exists='append', index=False)
         print(f"Datos guardados en la tabla personal con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
@@ -706,7 +740,7 @@ def process_comuna(comuna):
 if __name__ == '__main__':
 
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
-    
+    truncate_table_personal(conn_params)
     for comuna in comunas[:]:
         print(comuna)
         result = process_comuna(comuna)
