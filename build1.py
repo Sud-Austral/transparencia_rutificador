@@ -20,7 +20,7 @@ import psycopg2
 from psycopg2 import sql
 from sqlalchemy import create_engine
 
-def save_dataframe_to_postgres(df, table_name, conn_params):
+def save_dataframe_to_postgres(df, conn_params):
     """
     try:
         conn = psycopg2.connect(**conn_params)
@@ -45,7 +45,8 @@ def save_dataframe_to_postgres(df, table_name, conn_params):
         engine = create_engine(conn_string)
 
         # Guardar el DataFrame en la tabla
-        df.to_sql(table_name, engine, if_exists='replace', index=False)
+        df.columns = [x.replace(" ","_") for x in df.columns]
+        df.to_sql("personal", engine, if_exists='append', index=False)
         print(f"Datos guardados en la tabla '{table_name}' con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
@@ -676,7 +677,7 @@ def process_comuna(comuna):
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
-        save_dataframe_to_postgres(df, 'personas', conn_params)
+        save_dataframe_to_postgres(df, conn_params)
     except Exception as e:
         print(f"Error al procesar {comuna}: {e}")
         error_traceback = traceback.format_exc()
