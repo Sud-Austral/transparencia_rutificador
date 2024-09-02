@@ -45,9 +45,28 @@ def save_dataframe_to_postgres(df, conn_params):
         engine = create_engine(conn_string)
 
         # Guardar el DataFrame en la tabla
-        df.columns = [x.replace(" ","_").lower() for x in df.columns]
+        df.columns = ['organismo_nombre',
+                        'anyo',
+                        'mes',
+                        'tipo_calificacionp',
+                        'tipo_cargo',
+                        'remuneracionbruta_mensual',
+                        'remuliquida_mensual',
+                        'base',
+                        'tipo_pago',
+                        'num_cuotas',
+                        'nombrecompleto_x',
+                        'rut',
+                        'nombreencontrado',
+                        'cantidad_de_pago',
+                        'detalle_de_base',
+                        'tipo_de_contrato',
+                        'homologado',
+                        'homologado_2',
+                        'key',
+                        'metodo']
         df.to_sql("personal", engine, if_exists='append', index=False)
-        print(f"Datos guardados en la tabla '{table_name}' con éxito.")
+        print(f"Datos guardados en la tabla personal con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
         error_traceback = traceback.format_exc()
