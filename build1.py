@@ -45,13 +45,13 @@ def save_dataframe_to_postgres(df, conn_params):
         engine = create_engine(conn_string)
 
         # Guardar el DataFrame en la tabla
-        df.columns = [x.replace(" ","_") for x in df.columns]
+        df.columns = [x.replace(" ","_").lower() for x in df.columns]
         df.to_sql("personal", engine, if_exists='append', index=False)
         print(f"Datos guardados en la tabla '{table_name}' con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
         error_traceback = traceback.format_exc()
-        print("Traceback detallado:")
+        print("Traceback detallado en SQL:")
         print(error_traceback)
 
 # Ejemplo de uso

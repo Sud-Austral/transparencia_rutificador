@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS PERSONAL (
     id SERIAL PRIMARY KEY,
     organismo_nombre VARCHAR(200),
     anyo NUMERIC(6,2),
-    mes VARCHAR(200),
+    Mes VARCHAR(200),
     tipo_calificacionp VARCHAR(200),
     tipo_cargo VARCHAR(200),
     remuneracionbruta_mensual NUMERIC(12),
