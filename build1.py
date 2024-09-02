@@ -713,7 +713,7 @@ if __name__ == '__main__':
         # Eliminar la variable que contiene los datos grandes para liberar memoria
         del result
         gc.collect()
-        break
+        #break
     actualizar_DB_RUT()
     
 
