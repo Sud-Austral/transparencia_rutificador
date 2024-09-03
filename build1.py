@@ -99,7 +99,7 @@ def save_dataframe_to_postgres(df, conn_params):
                         'homologado_2',
                         'key',
                         'metodo']
-        df.head(1000).to_sql("personal", engine, if_exists='append', index=False)
+        df.head(10000).to_sql("personal", engine, if_exists='append', index=False)
         print(f"Datos guardados en la tabla personal con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
