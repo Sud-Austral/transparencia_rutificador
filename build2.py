@@ -1,20 +1,34 @@
 import pandas as pd
 import datetime
-import locale
 import numpy as np
 # Establecer el locale en español para que reconozca el nombre del mes
-locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+
+meses = {
+    'Enero': 1,
+    'Febrero': 2,
+    'Marzo': 3,
+    'Abril': 4,
+    'Mayo': 5,
+    'Junio': 6,
+    'Julio': 7,
+    'Agosto': 8,
+    'Septiembre': 9,
+    'Octubre': 10,
+    'Noviembre': 11,
+    'Diciembre': 12
+}
 
 def get_fecha(fila):
     try:
-        fecha_string = f'{fila["anyo"]}-{fila["Mes"]}'
-        fecha_dt = datetime.datetime.strptime(fecha_string, '%Y-%B')
+        mes_numero = meses.get(fila["Mes"], 1)  # Si el mes no está en el diccionario, usar Enero (1)
+        fecha_string = f'{fila["anyo"]}-{mes_numero:02d}-01'  
+        fecha_dt = datetime.datetime.strptime(fecha_string, '%Y-%m-%d')
     except:
-        fecha_dt = datetime.datetime.strptime("2099-Enero", '%Y-%B')
+        fecha_dt = datetime.datetime.strptime(fecha_string, '%Y-%m-%d')
     return fecha_dt
 
 def encontrar_nuevos(df,fecha):
-    fechaMinima = datetime.datetime.strptime(fecha, '%Y-%B')
+    fechaMinima = datetime.datetime.strptime(fecha, '%Y-%m')
     df["Fecha"] = df.apply(get_fecha, axis=1)
     min_dates = df.groupby("rut")["Fecha"].min().reset_index()
     min_dates[f"Marca_{fecha}"] = np.where(min_dates["Fecha"] <= fechaMinima, "Antes", "Después")
@@ -67,6 +81,6 @@ if __name__ == '__main__':
         #print(df2)
     for comuna in comunas2:
         df = pd.read_excel(f"organismoSalida2/{comuna}.xlsx", index=False)
-        df2 = encontrar_nuevos(df,"2021-Julio")
+        df2 = encontrar_nuevos(df,"2021-07")
         df2.to_excel(f"personalNuevo/{comuna}.xlsx", index=False)
 
