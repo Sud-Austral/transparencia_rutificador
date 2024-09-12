@@ -692,7 +692,7 @@ def calificacion_nivel_2(df):
 
 def process_comuna(comuna):
     base = string_to_url(comuna)
-    url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/{base}.csv"
+    url = f"https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA2/raw/main/comunas/{base}.csv"
     print(url)
     try:   
         df = pd.read_csv(url, compression='xz', sep='\t', dtype=dtype_dict)
