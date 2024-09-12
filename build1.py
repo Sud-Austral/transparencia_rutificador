@@ -151,8 +151,6 @@ DB_RUT_HISTORICO = pd.concat([aux_1, aux_2])
 # Seleccionamos solo las columnas relevantes y creamos un nuevo DataFrame con esas columnas.
 DB_RUT = pd.concat([aux_1, aux_2])[['NombreCompleto', 'rut', 'Nombre_merge', 'Fecha']]
 
-import pandas as pd
-
 # Rellenamos los valores nulos en las columnas 'NombreCompleto' y 'Nombre_merge' con cadenas vacías.
 DB_RUT["NombreCompleto"] = DB_RUT["NombreCompleto"].fillna("")
 DB_RUT["Nombre_merge"]   = DB_RUT["Nombre_merge"].fillna("")
@@ -242,7 +240,9 @@ comunas = [
     'Municipalidad de Valdivia',
     'Municipalidad de Valparaíso',
     'Municipalidad de Viña del Mar',
-    'Municipalidad de Ñuñoa'
+    'Municipalidad de Ñuñoa',
+    'Municipalidad de Quilpué',
+    'Municipalidad de Villa Alemana'
 ]
 
 
@@ -671,11 +671,16 @@ def calificacion_nivel_2(df):
     #acumuladoDF = pd.concat(acumulador, ignore_index=True)
     #df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
      # Utilizar generadores para la concatenación
-    df_resto = pd.concat((x for x in acumulador_resto if not x.empty), ignore_index=True)
+    if(len([x for x in acumulador_resto if not x.empty]) > 0):
+        df_resto = pd.concat((x for x in acumulador_resto if not x.empty), ignore_index=True)
+    
     acumuladoDF = pd.concat((x for x in acumulador if not x.empty), ignore_index=True)
     
-    df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
-
+    if(len([x for x in acumulador_resto if not x.empty]) > 0):
+        df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
+    else:
+        df_final = pd.concat([acumuladoDF], ignore_index=True)
+        
     df_final_merge = df_final.merge(hologado2_x2, how="left")
     final = pd.concat([df_final_merge, acumuladoDF_no_homologado], ignore_index=True)
 
