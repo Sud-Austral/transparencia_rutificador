@@ -79,7 +79,7 @@ if __name__ == '__main__':
         # Eliminar la variable que contiene los datos grandes para liberar memoria
         #print(url)
         #print(df2)
-    for comuna in comunas2:
+    for comuna in comuna2:
         df = pd.read_excel(f"organismoSalida2/{comuna}.xlsx", index=False)
         df2 = encontrar_nuevos(df,"2021-07")
         df2.to_excel(f"personalNuevo/{comuna}.xlsx", index=False)
