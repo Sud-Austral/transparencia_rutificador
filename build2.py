@@ -81,7 +81,7 @@ if __name__ == '__main__':
         #print(df2)
     print("Primer cierre")
     
-    for comuna in comuna2:
+    for comuna in comunas:
         df = pd.read_excel(f"organismoSalida2/{comuna}.xlsx")
         df2 = encontrar_nuevos(df,"2021-07")
         df2.to_excel(f"personalNuevo/{comuna}.xlsx", index=False)
