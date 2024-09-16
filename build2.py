@@ -24,7 +24,7 @@ def get_fecha(fila):
         fecha_string = f'{fila["anyo"]}-{mes_numero:02d}-01'  
         fecha_dt = datetime.datetime.strptime(fecha_string, '%Y-%m-%d')
     except:
-        fecha_dt = datetime.datetime.strptime(fecha_string, '%Y-%m-%d')
+        fecha_dt = datetime.datetime.strptime("2099-01-01", '%Y-%m-%d')
     return fecha_dt
 
 def encontrar_nuevos(df,fecha):

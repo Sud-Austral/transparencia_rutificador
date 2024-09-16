@@ -756,20 +756,27 @@ def listar_archivos(carpeta):
         return []
 
 def GLOBAL():
-    print("Limpiando tabla")
+    #print("Limpiando tabla")
     truncate_table_personal(conn_params)
     for i in listar_archivos("organismo/"):
         print(i, end='\r')
-        process_comuna(i)
+        url = f"organismo/{i}"
+        process_comuna(url)
     actualizar_DB_RUT()
 
 
 if __name__ == '__main__':
-    truncate_table_personal(conn_params)
+    #truncate_table_personal(conn_params)
     for i in listar_archivos("organismo/"):
         print(i, end='\r')
-        process_comuna(f"organismo/{i}")
-    actualizar_DB_RUT()
+        url = f"organismo/{i}"
+        print(url, end='\r')
+        try:   
+            df = pd.read_csv(url, compression='xz', sep='\t', dtype=dtype_dict)
+        except Exception as e: 
+            df = pd.read_csv(url, compression='xz', sep='\t')
+        #process_comuna(f"organismo/{i}")
+    #actualizar_DB_RUT()
     #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
     """
     truncate_table_personal(conn_params)
