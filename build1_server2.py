@@ -99,8 +99,8 @@ def save_dataframe_to_postgres(df, conn_params):
                         'homologado_2',
                         'key',
                         'metodo']
-        df.head(10000).to_sql("personal2", engine, if_exists='append', index=False)
-        print(f"Datos guardados en la tabla personal con éxito.")
+        df.to_sql("personal2", engine, if_exists='append', index=False)
+        #print(f"Datos guardados en la tabla personal con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
         error_traceback = traceback.format_exc()
@@ -516,7 +516,8 @@ def buscar_rut(df):
         filtered_words = [word for word in words if word not in exclusion_list]
         word_counts = Counter(filtered_words)
         most_common_words = word_counts.most_common(1)
-        
+        if not most_common_words:
+            break
         # Obtener la palabra más común
         i = [x[0] for x in most_common_words][0]
         
@@ -589,10 +590,12 @@ def buscar_rut(df):
 
 def rutificador(df):
     merge = df.merge(DB_RUT, on="NombreCompleto",how="left")
+    #merge.loc[merge["NombreCompleto"].isnull(), "rut"] = 90001171
     merge2 = merge[merge["rut"].isnull()]
     if not merge2.empty:
         buscar_rut(merge)
         merge = df.merge(DB_RUT, on="NombreCompleto",how="left")
+        merge.loc[merge["NombreCompleto"] == "", "rut"] = "90001171"
     return merge
 
 def getPagos(df):   
@@ -643,6 +646,12 @@ def calificacion_nivel_2(df):
     is_homologado = df["Homologado"].isin(lista_homologado_original)
     acumuladoDF_homologado = df[is_homologado]
     acumuladoDF_no_homologado = df[~is_homologado]
+    if acumuladoDF_homologado.shape[0] == 0:
+        df["Homologado 2"] = "Sin Clasificar"
+        df["Homologado"] = df["Homologado"].fillna("Sin Clasificar")
+        return df
+    
+
 
     acumulador = []
     acumulador_resto = []
@@ -664,23 +673,29 @@ def calificacion_nivel_2(df):
 
         acumulador_resto.append(aux)
 
-    #df_resto = pd.concat(acumulador_resto, ignore_index=True)
-    #acumuladoDF = pd.concat(acumulador, ignore_index=True)
-    #df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
-     # Utilizar generadores para la concatenación
-    if(len([x for x in acumulador_resto if not x.empty]) > 0):
+    # Verificar si hay objetos no vacíos en acumulador_resto antes de concatenar
+    if any(not x.empty for x in acumulador_resto):
         df_resto = pd.concat((x for x in acumulador_resto if not x.empty), ignore_index=True)
-        
-    acumuladoDF = pd.concat((x for x in acumulador if not x.empty), ignore_index=True)
-    
-    if(len([x for x in acumulador_resto if not x.empty]) > 0):
+    else:
+        df_resto = pd.DataFrame()  # Crear un DataFrame vacío en caso de que no haya nada que concatenar
+
+    # Verificar si hay objetos no vacíos en acumulador antes de concatenar
+    if any(not x.empty for x in acumulador):
+        acumuladoDF = pd.concat((x for x in acumulador if not x.empty), ignore_index=True)
+    else:
+        acumuladoDF = pd.DataFrame()  # Crear un DataFrame vacío si no hay nada que concatenar
+
+    # Si hay datos en df_resto, los concatenamos con acumuladoDF
+    if not df_resto.empty:
         df_final = pd.concat([acumuladoDF, df_resto], ignore_index=True)
     else:
-        df_final = pd.concat([acumuladoDF], ignore_index=True)
+        df_final = acumuladoDF  # Si df_resto está vacío, usamos solo acumuladoDF
 
+    # Merge y concatenación final
     df_final_merge = df_final.merge(hologado2_x2, how="left")
     final = pd.concat([df_final_merge, acumuladoDF_no_homologado], ignore_index=True)
 
+    # Rellenar valores nulos
     final["Homologado"] = final["Homologado"].fillna("Sin Clasificar")
     final["Homologado 2"] = final["Homologado 2"].fillna("Sin Clasificar")
 
