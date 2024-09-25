@@ -570,6 +570,8 @@ def buscar_rut(df):
         # Aplicar la función de similitud para encontrar el nombre más parecido
         aux[["probabilidad", "nombre"]] = aux["NombreCompleto"].apply(lambda x: encontrar_nombre_similar(x, ref))
         acumulador.append(aux.copy())
+    if not acumulador:
+        return None
     
     # Concatenar todos los resultados acumulados
     salida = pd.concat(acumulador)
