@@ -1024,13 +1024,44 @@ def save_dataframe_general(df,tabla,conn_params):
 
 def get_resumen_anyo(df):
     df2 = df[['organismo_nombre','anyo', 'Mes','rut','remuneracionbruta_mensual', 'remuliquida_mensual']]
+    df2['remuneracionbruta_mean'] = df2.groupby(['organismo_nombre', 'anyo'])['remuneracionbruta_mensual'].transform('mean')
+    df2['remuneracionbruta_std'] = df2.groupby(['organismo_nombre', 'anyo'])['remuneracionbruta_mensual'].transform('std')
+
+    df2['remuliquida_mean'] = df2.groupby(['organismo_nombre', 'anyo'])['remuliquida_mensual'].transform('mean')
+    df2['remuliquida_std'] = df2.groupby(['organismo_nombre', 'anyo'])['remuliquida_mensual'].transform('std')
+
+    # Crear columnas que indican si cumplen la condición considerando el promedio y la desviación estándar por año
+    df2['remuneracionbruta_superior'] = df2['remuneracionbruta_mensual'] > (df2['remuneracionbruta_mean'] + 3 * df2['remuneracionbruta_std'])
+    df2['remuliquida_superior'] = df2['remuliquida_mensual'] > (df2['remuliquida_mean'] + 3 * df2['remuliquida_std'])
+
+    df2['remuliquida_10']       = df2['remuliquida_mensual']       > 5000000
+    df2['remuneracionbruta_10'] = df2['remuneracionbruta_mensual'] > 5000000
+
+
+    df2['rut_count'] = df2.groupby(['organismo_nombre', 'anyo', 'rut'])['rut'].transform('count')
+
+    # Crear columnas booleanas para los casos de duplicados, triplicados y más de 4
+    df2['rut_12'] = (df2['rut_count'] > 12) & (df2['rut_count'] < 18)
+    df2['rut_18'] = (df2['rut_count'] >= 18) & (df2['rut_count'] < 24)
+    df2['rut_24'] = df2['rut_count'] >= 24
     df3 = df2.groupby(by=['organismo_nombre', 'anyo']).agg(
         rut_unique_count=('rut', 'nunique'),
         remuneracionbruta_sum=('remuneracionbruta_mensual', 'sum'),
         remuliquida_sum=('remuliquida_mensual', 'sum'),
         meses_unicos=('Mes', 'nunique'),
         pagos=('remuneracionbruta_mensual', 'count'),
-        ).reset_index()
+        remuneracionbruta_superior_count=('remuneracionbruta_superior', 'sum'),
+        remuliquida_superior_count=('remuliquida_superior', 'sum'),
+        remuneracionbruta_superior_10=('remuneracionbruta_10', 'sum'),
+        remuliquida_superior_10=('remuliquida_10', 'sum'),
+
+        remuneracionbruta_mean=('remuneracionbruta_mean', 'mean'),
+        remuliquida_mean=('remuliquida_mean', 'mean'),
+        
+        rut_12_count=('rut_12', 'sum'),
+        rut_24_count=('rut_18', 'sum'),
+        rut_36_count=('rut_24', 'sum')
+    ).reset_index()
     df3["max_teorico"] = df3["rut_unique_count"] * df3["meses_unicos"]
     df3["dif_pagos"] = df3["pagos"] - df3["max_teorico"]
     df3["pago_x_persona"] = df3["pagos"] / df3["rut_unique_count"]
@@ -1174,12 +1205,13 @@ def GLOBAL():
     truncate_table_personal_general(conn_params,"acumulado_resumen_rut_homolago_acumulado")
     truncate_table_personal_general(conn_params,"acumulado_resumen_solo_rut_acumulado")
     truncate_table_personal_general(conn_params,"resumen_pago")
-
+    n = 1
     for i in listar_archivos("organismo/"):
         #print(i, end='\r')
-        print(f"\r{i[:150]:<150}", end='')
+        print(f"\rPunto {n} {i[:150]:<150} ", end='')
         url = f"organismo/{i}"
         process_comuna(url)
+        n += 1
 
     actualizar_DB_RUT()
     truncate_update_personal2(conn_params)

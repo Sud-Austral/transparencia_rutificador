@@ -130,9 +130,19 @@ CREATE TABLE resumen_pago (
     remuliquida_sum BIGINT,
     meses_unicos  INT,
     pagos BIGINT,
+
+    remuneracionbruta_superior_count BIGINT, 
+    remuliquida_superior_count BIGINT,
+    remuneracionbruta_superior_10 BIGINT,
+    remuliquida_superior_10 BIGINT,
+    remuneracionbruta_mean BIGINT,
+    remuliquida_mean BIGINT,
+    rut_12_count BIGINT,
+    rut_24_count BIGINT,
+    rut_36_count BIGINT,
     max_teorico BIGINT,
     dif_pagos INT,
-    pago_x_persona NUMERIC(18, 6);
+    pago_x_persona NUMERIC(18, 6)
 );
 
 CREATE TABLE organismo360 (
