@@ -54,7 +54,129 @@ def truncate_table_personal(db_config):
         if conn:
             conn.close()
 
+def truncate_table_personal_general(db_config,tabla):
+    """
+    Esta función ejecuta el comando TRUNCATE en la tabla 'personal'.
+    
+    Parámetros:
+        db_config (dict): Un diccionario con la configuración de la base de datos.
+                          Debe contener las claves 'dbname', 'user', 'password', 'host', y 'port'.
+    """
+    try:
+        # Conectar a la base de datos
+        conn = psycopg2.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Comando SQL para truncar la tabla
+        truncate_query = sql.SQL(f"TRUNCATE TABLE {tabla}")
+
+        # Ejecutar la consulta
+        cursor.execute(truncate_query)
+
+        # Confirmar la transacción
+        conn.commit()
+
+        print(f"La tabla {tabla} ha sido truncada exitosamente.")
+
+    except Exception as e:
+        print(f"Error al truncar la tabla: {e}")
+    
+    finally:
+        # Cerrar la conexión y el cursor
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+def truncate_update_personal2(db_config):
+    """
+    Esta función ejecuta el comando TRUNCATE en la tabla 'personal'.
+    
+    Parámetros:
+        db_config (dict): Un diccionario con la configuración de la base de datos.
+                          Debe contener las claves 'dbname', 'user', 'password', 'host', y 'port'.
+    """
+    query2 = """
+        INSERT INTO personal2 (
+            id, 
+            anyo, 
+            remuneracionbruta_mensual, 
+            remuliquida_mensual, 
+            num_cuotas, 
+            cantidad_de_pago, 
+            detalle_de_base, 
+            tipo_de_contrato, 
+            base, 
+            tipo_pago, 
+            homologado, 
+            nombrecompleto_x, 
+            rut, 
+            nombreencontrado, 
+            organismo_nombre, 
+            homologado_2, 
+            mes, 
+            tipo_calificacionp, 
+            tipo_cargo, 
+            key, 
+            metodo
+        ) 
+        SELECT 
+            id, 
+            anyo, 
+            remuneracionbruta_mensual, 
+            remuliquida_mensual, 
+            num_cuotas, 
+            cantidad_de_pago, 
+            detalle_de_base, 
+            tipo_de_contrato, 
+            base, 
+            tipo_pago, 
+            homologado, 
+            nombrecompleto_x, 
+            rut, 
+            nombreencontrado, 
+            organismo_nombre, 
+            homologado_2, 
+            mes, 
+            tipo_calificacionp, 
+            tipo_cargo, 
+            key, 
+            metodo 
+        FROM personal2_base;
+    """
+
+    try:
+        # Conectar a la base de datos
+        conn = psycopg2.connect(**db_config)
+        cursor = conn.cursor()
+
+        # Comando SQL para truncar la tabla
+        truncate_query = sql.SQL(f"TRUNCATE TABLE personal2")
+
+
+        # Ejecutar la consulta
+        cursor.execute(truncate_query)
+
+        cursor.execute(query2)
+
+        # Confirmar la transacción
+        conn.commit()
+
+        #print(f"La tabla {tabla} ha sido truncada exitosamente.")
+
+    except Exception as e:
+        print(f"Error al truncar la tabla: {e}")
+    
+    finally:
+        # Cerrar la conexión y el cursor
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
 def save_dataframe_to_postgres(df, conn_params):
+    table_name = "personal2_base"
     """
     try:
         conn = psycopg2.connect(**conn_params)
@@ -99,7 +221,7 @@ def save_dataframe_to_postgres(df, conn_params):
                         'homologado_2',
                         'key',
                         'metodo']
-        df.to_sql("personal2", engine, if_exists='append', index=False)
+        df.to_sql(table_name, engine, if_exists='append', index=False)
         #print(f"Datos guardados en la tabla personal con éxito.")
     except Exception as e:
         print(f"Ocurrió un error al guardar los datos: {e}")
@@ -113,6 +235,7 @@ conn_params = {
     'user': 'postgres',
     'password': 'UnaCasaEnUnArbol2024',
     'host': 'localhost'
+    #'host': '186.67.61.251'
 }
 
 
@@ -703,6 +826,257 @@ def calificacion_nivel_2(df):
 
     return final
 
+def save_dataframe_to_postgres2(df, conn_params):
+    conn_string = f"postgresql://{conn_params['user']}:{conn_params['password']}@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}"
+    try:
+        # Crear un motor de SQLAlchemy
+        engine = create_engine(conn_string)
+        df.to_sql("acumulado_rutificador", engine, if_exists='append', index=False)
+    except Exception as e:
+        print(f"Ocurrió un error al guardar los datos: {e}")
+        error_traceback = traceback.format_exc()
+        print("Traceback detallado en SQL:")
+        print(error_traceback) 
+
+
+def get_fecha(fila):
+    meses = {
+        "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4,
+        "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8,
+        "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+    }
+    try:
+        mes_numero = meses[fila["mes"]]
+        fecha_string = f'{int(fila["anyo"])}-{mes_numero}'
+        fecha_dt = datetime.strptime(fecha_string, '%Y-%m')
+    except Exception as e:
+        fecha_dt = datetime.strptime("2099-01", '%Y-%m')
+    
+    return fecha_dt
+
+def get_fecha2(fila):
+    meses = {
+        "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4,
+        "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8,
+        "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+    }
+    try:
+        mes_numero = meses[fila["Mes"]]
+        fecha_string = f'{int(fila["anyo"])}-{mes_numero}'
+        fecha_dt = datetime.strptime(fecha_string, '%Y-%m')
+    except Exception as e:
+        fecha_dt = datetime.strptime("2099-01", '%Y-%m')
+    
+    return fecha_dt
+
+
+""" Nuevas Columnas para insertar en DB
+'organismo_nombre', 'anyo', 'mes', 'tipo_calificacionp', 'tipo_cargo',
+       'remuneracionbruta_mensual', 'remuliquida_mensual', 'base', 'tipo_pago',
+       'num_cuotas', 'nombrecompleto_x', 'rut', 'nombreencontrado',
+       'cantidad_de_pago', 'detalle_de_base', 'tipo_de_contrato', 'homologado',
+       'homologado_2', 'key', 'metodo']
+"""
+def GetDetalle(df):
+    #df = pd.read_excel(url)
+    organismo = df.iloc[0].organismo_nombre
+    df2 =df[(df["anyo"] >= 2000) & (df["anyo"] <= 2024)]
+    df2["Fecha"] = df2.apply(get_fecha, axis=1)
+    df3 = df2[[ 'Fecha','rut','homologado',"base"]].drop_duplicates()
+    agrupado_in = df3.groupby(['rut','homologado',"base"]).min().reset_index()
+    agrupado_in2 = agrupado_in.groupby(['Fecha','homologado',"base"]).count().reset_index().rename(columns = {"rut":"rut_in"})
+    
+    agrupado_out = df3.groupby(['rut','homologado',"base"]).max().reset_index()
+    agrupado_out2 = agrupado_out.groupby(['Fecha','homologado',"base"]).count().reset_index().rename(columns = {"rut":"rut_out"})
+    
+    merge = agrupado_in2.merge(agrupado_out2, on=['Fecha','homologado',"base"], how="outer").sort_values(by=['Fecha', 'homologado', 'base'])
+    
+    fechas =  merge[["Fecha"]].drop_duplicates()
+    Homologado = merge[['homologado']].drop_duplicates()
+    bases = merge[['base']].drop_duplicates()
+    base = fechas.merge(Homologado, how="cross").merge(bases,how="cross")
+    merge = merge.merge(base, on=['Fecha', 'homologado', 'base'],how="outer")
+    
+    merge["rut_in"] = merge["rut_in"].fillna(0)
+    merge["rut_out"] = merge["rut_out"].fillna(0)
+    merge["Diferencia"] = merge["rut_in"] - merge["rut_out"]
+    #merge['Acumulado'] = merge.groupby(['Fecha', 'Homologado', 'base'])['Diferencia'].cumsum()
+    merge['Acumulado'] = merge.groupby(['homologado', 'base'])['Diferencia'].cumsum()
+    merge["nueva_columna"] = organismo
+    #merge.to_excel(archivo, index=False)
+    return merge.rename(columns= lambda x: x.lower())
+
+
+
+
+#def clean_file(url):
+def clean_file(df):
+    #df = pd.read_excel(url)
+    df2 =df[(df["anyo"] >= 2000) & (df["anyo"] <= 2030)]
+    df2["Fecha"] = df2.apply(get_fecha2, axis=1)
+    fecha_actual = pd.Timestamp.today()
+    df2 = df2[df2['Fecha'] < fecha_actual]
+    
+    return df2
+
+def getEstadistica(df2):
+    df_aux = df2[['rut',"Fecha",'remuneracionbruta_mensual', 'remuliquida_mensual']]
+    df_oficio = df2[['rut','Fecha','base','Homologado', 'Homologado 2']].drop_duplicates()
+    
+    min_dates = df2.groupby("rut")["Fecha"].min().reset_index()
+    #min_dates = min_dates.rename(columns={'Fecha': 'Fecha-Ingreso'})
+    min_dates2 = min_dates.merge(df_aux)
+    min_dates3 = min_dates2.groupby(["rut","Fecha"]).sum().reset_index()
+    min_dates3 = min_dates3.sort_values("remuneracionbruta_mensual",  ascending=False)
+    min_dates3_oficio = min_dates3.merge(df_oficio).drop_duplicates(subset=['rut','Fecha'], keep='first')
+    
+    max_dates = df2.groupby("rut")["Fecha"].max().reset_index()
+    #max_dates = max_dates.rename(columns={'Fecha': 'Fecha-Egreso'})
+    max_dates2 = max_dates.merge(df_aux)
+    max_dates3 = max_dates2.groupby(["rut","Fecha"]).sum().reset_index()
+    max_dates3 = max_dates3.sort_values("remuneracionbruta_mensual",  ascending=False)
+    max_dates3_oficio = max_dates3.merge(df_oficio).drop_duplicates(subset=['rut','Fecha'], keep='first')
+    min_final = min_dates3_oficio.rename(columns=lambda x: f'{x}_in' if x != 'rut' else x)
+    max_final = max_dates3_oficio.rename(columns=lambda x: f'{x}_out' if x != 'rut' else x)
+    max_final = max_dates3_oficio.rename(columns=lambda x: f'{x}_out' if x != 'rut' else x)
+    max_final = max_dates3_oficio.rename(columns=lambda x: f'{x}_out' if x != 'rut' else x)
+    
+    merge = min_final.merge(max_final)
+    #merge_in  = merge.groupby(["Fecha_in","base_in","Homologado_in"])["rut"].count().reset_index()
+    merge_in = merge.groupby(["Fecha_in","base_in","Homologado_in"]).agg({"rut":"count","remuneracionbruta_mensual_in":"sum","remuliquida_mensual_in":"sum"}).reset_index()
+    #merge_out = merge.groupby(["Fecha_out","base_out","Homologado_out"])["rut"].count().reset_index()
+    merge_out = merge.groupby(["Fecha_out","base_out","Homologado_out"]).agg({"rut":"count","remuneracionbruta_mensual_out":"sum","remuliquida_mensual_out":"sum"}).reset_index()
+    merge2 = merge_in.merge(merge_out, left_on=["Fecha_in",'base_in', 'Homologado_in'],right_on=["Fecha_out",'base_out', 'Homologado_out'], how="outer")
+    
+    merge2_all = merge2[(merge2["rut_x"].notnull()) & (merge2["rut_y"].notnull())]
+    
+    merge2_out = merge2[merge2["rut_x"].isnull()]
+    merge2_out["Fecha_in"] = merge2_out["Fecha_out"]
+    merge2_out["base_in"] = merge2_out["base_out"]
+    merge2_out["Homologado_in"] = merge2_out["Homologado_out"]
+    merge2_out["rut_x"] = 0
+    
+    merge2_in = merge2[merge2["rut_y"].isnull()]
+    merge2_in["Fecha_out"] = merge2_in["Fecha_in"]
+    merge2_in["base_out"] = merge2_in["base_in"]
+    merge2_in["Homologado_out"] = merge2_in["Homologado_in"]
+    merge2_in["rut_y"] = 0
+    
+    merge3 = pd.concat([merge2_out,merge2_in,merge2_all])
+    
+    merge4 = merge3.rename(columns={"rut_x":"rut_in","rut_y":"rut_out","Fecha_in":"Fecha","Homologado_in":"Homologado","base_in":"base"})
+    del merge4["Fecha_out"]
+    del merge4["Homologado_out"]
+    del merge4["base_out"]
+    fechas =  df2[["Fecha"]].drop_duplicates()
+    Homologado = df2[['Homologado']].drop_duplicates()
+    bases = df2[['base']].drop_duplicates()
+    base = fechas.merge(Homologado, how="cross").merge(bases,how="cross")
+    
+    merge4 = merge4.merge(base, on=['Fecha', 'Homologado', 'base'],how="outer")
+    
+    lista_fill = [ 'rut_in','remuneracionbruta_mensual_in', 'remuliquida_mensual_in', 'rut_out',
+           'remuneracionbruta_mensual_out', 'remuliquida_mensual_out']
+    
+    for i in lista_fill:
+        merge4[i] = merge4[i].fillna(0)   
+    
+    Resumen_Fecha2 = merge4.groupby(['Fecha', 'base'])[['rut_in','remuneracionbruta_mensual_in', 'remuliquida_mensual_in',  'rut_out', 'remuneracionbruta_mensual_out', 'remuliquida_mensual_out']].sum().reset_index()
+    Resumen_Fecha2["Diferencia"] =  Resumen_Fecha2["rut_in"] - Resumen_Fecha2["rut_out"]
+    Resumen_Fecha2['Acumulado'] = Resumen_Fecha2.groupby(['base'])['Diferencia'].cumsum()
+    return [merge,merge4,Resumen_Fecha2]
+
+def GetDetalle2(df2):
+    df3 = df2[[ 'Fecha','rut','Homologado',"base"]].drop_duplicates()
+    agrupado_in = df3.groupby(['rut','Homologado',"base"]).min().reset_index()
+    agrupado_in2 = agrupado_in.groupby(['Fecha','Homologado',"base"]).count().reset_index().rename(columns = {"rut":"rut_in"})
+    
+    agrupado_out = df3.groupby(['rut','Homologado',"base"]).max().reset_index()
+    agrupado_out2 = agrupado_out.groupby(['Fecha','Homologado',"base"]).count().reset_index().rename(columns = {"rut":"rut_out"})
+    
+    merge = agrupado_in2.merge(agrupado_out2, on=['Fecha','Homologado',"base"], how="outer").sort_values(by=['Fecha', 'Homologado', 'base'])
+    
+    fechas =  df2[["Fecha"]].drop_duplicates()
+    Homologado = df2[['Homologado']].drop_duplicates()
+    bases = df2[['base']].drop_duplicates()
+    base = fechas.merge(Homologado, how="cross").merge(bases,how="cross")
+    merge = merge.merge(base, on=['Fecha', 'Homologado', 'base'],how="outer")
+    
+    merge["rut_in"] = merge["rut_in"].fillna(0)
+    merge["rut_out"] = merge["rut_out"].fillna(0)
+    merge["Diferencia"] = merge["rut_in"] - merge["rut_out"]
+    #merge['Acumulado'] = merge.groupby(['Fecha', 'Homologado', 'base'])['Diferencia'].cumsum()
+    merge['Acumulado'] = merge.groupby(['Homologado', 'base'])['Diferencia'].cumsum()
+    merge = merge.rename(columns={"rut_in":"homologado_in","rut_out":"homologado_out","Diferencia":"homologado_diferencia","Acumulado":"homologado_acumulado"})
+    return merge 
+
+def save_dataframe_general(df,tabla,conn_params):
+    conn_string = f"postgresql://{conn_params['user']}:{conn_params['password']}@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}"
+    try:
+        # Crear un motor de SQLAlchemy
+        engine = create_engine(conn_string)
+        df.to_sql(tabla, engine, if_exists='append', index=False)
+    except Exception as e:
+        print(f"Ocurrió un error al guardar los datos: {e}")
+        error_traceback = traceback.format_exc()
+        print("Traceback detallado en SQL:")
+        print(error_traceback)
+
+def get_resumen_anyo(df):
+    df2 = df[['organismo_nombre','anyo', 'Mes','rut','remuneracionbruta_mensual', 'remuliquida_mensual']]
+    df3 = df2.groupby(by=['organismo_nombre', 'anyo']).agg(
+        rut_unique_count=('rut', 'nunique'),
+        remuneracionbruta_sum=('remuneracionbruta_mensual', 'sum'),
+        remuliquida_sum=('remuliquida_mensual', 'sum'),
+        meses_unicos=('Mes', 'nunique'),
+        pagos=('remuneracionbruta_mensual', 'count'),
+        ).reset_index()
+    df3["max_teorico"] = df3["rut_unique_count"] * df3["meses_unicos"]
+    df3["dif_pagos"] = df3["pagos"] - df3["max_teorico"]
+    df3["pago_x_persona"] = df3["pagos"] / df3["rut_unique_count"]
+    save_dataframe_general(df3,"resumen_pago",conn_params)
+    return True
+
+
+
+def global_resumen(df):
+    organismo = df.iloc[0].organismo_nombre
+    df2 = clean_file(df)
+    get_resumen_anyo(df2)
+    resultado1 = getEstadistica(df2)
+    resultado2 = GetDetalle2(df2)
+    merge = resultado1[1].merge(resultado2,on=['Fecha', 'base', 'Homologado'])
+    base_rut = DB_RUT[['NombreCompleto', 'rut']].drop_duplicates(subset=["rut"])
+    resultado1[0] = resultado1[0].merge(base_rut, how="left")
+    """
+    with pd.ExcelWriter(archivo_excel) as writer:
+        resultado1[0].to_excel(writer, sheet_name='Union', index=False)
+        merge.to_excel(writer, sheet_name='Resumen_Fecha', index=False)
+        resultado1[2].to_excel(writer, sheet_name='Resumen_Fecha2', index=False)
+    """
+    acumulado_rut_detallle_entrada_salida    = resultado1[0].copy()
+    acumulado_resumen_rut_homolago_acumulado = merge
+    acumulado_resumen_solo_rut_acumulado     = resultado1[2].copy()
+
+    acumulado_rut_detallle_entrada_salida   ["organismo"]    =  organismo
+    acumulado_resumen_rut_homolago_acumulado["organismo"]    =  organismo
+    acumulado_resumen_solo_rut_acumulado    ["organismo"]    =  organismo
+
+    acumulado_rut_detallle_entrada_salida    .columns = ["rut","fecha_in","remuneracionbruta_mensual_in","remuliquida_mensual_in",
+                                                         "base_in","homologado_in","homologado2_in","fecha_out","remuneracionbruta_mensual_out",
+                                                         "remuliquida_mensual_out","base_out","homologado_out","homologado2_out",
+                                                         "nombre_completo","organismo"]
+    acumulado_resumen_rut_homolago_acumulado .columns = ["fecha","base","homologado","rut_in","remuneracionbruta_mensual_in",
+                                                         "remuliquida_mensual_in","rut_out","remuneracionbruta_mensual_out",
+                                                         "remuliquida_mensual_out","homologado_in","homologado_out","homologado_diferencia",
+                                                         "homologado_acumulado","organismo"]
+    acumulado_resumen_solo_rut_acumulado     .columns = ["fecha","base","rut_in","remuneracionbruta_mensual_in","remuliquida_mensual_in",
+                                                         "rut_out","remuneracionbruta_mensual_out","remuliquida_mensual_out",
+                                                         "diferencia","acumulado","organismo"]
+
+    save_dataframe_general(acumulado_rut_detallle_entrada_salida,"acumulado_rut_detallle_entrada_salida",conn_params)
+    save_dataframe_general(acumulado_resumen_rut_homolago_acumulado,"acumulado_resumen_rut_homolago_acumulado",conn_params)
+    save_dataframe_general(acumulado_resumen_solo_rut_acumulado,"acumulado_resumen_solo_rut_acumulado",conn_params)
 
 def process_comuna(url):
     #base = string_to_url(comuna)
@@ -749,12 +1123,17 @@ def process_comuna(url):
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         #df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
+        global_resumen(df)
         save_dataframe_to_postgres(df, conn_params)
+        merge = GetDetalle(df)
+        save_dataframe_to_postgres2(merge, conn_params)
+
     except Exception as e:
         print(f"Error al procesar {url}: {e}")
         error_traceback = traceback.format_exc()
         print("Traceback detallado:")
         print(error_traceback)
+
 
 def listar_archivos(carpeta):
     try:
@@ -772,40 +1151,44 @@ def listar_archivos(carpeta):
         print(f"Error al listar archivos: {e}")
         return []
 
+def save_estadistica_db_rut_historico():
+    salida = DB_RUT_HISTORICO.groupby(by=["Fecha"]).size().reset_index()
+    salida.to_excel("estadistica_db_rut_historico.xlsx", index=False)
+
+def save_organismo360():
+    truncate_table_personal_general(conn_params,"organismo360")
+    url =  "https://www.cplt.cl/transparencia_activa/datoabierto/archivos/Organismos_360.csv"
+    df = pd.read_csv(url,sep=";",encoding="latin")
+    df2 = df.rename(columns = lambda x: x.lower())
+    save_dataframe_general(df2,"organismo360",conn_params)
+
+
+
 def GLOBAL():
-    #print("Limpiando tabla")
-    truncate_table_personal(conn_params)
+    print("Limpiando tabla")
+    #truncate_table_personal(conn_params)
+    truncate_table_personal_general(conn_params,"personal2_base")
+    truncate_table_personal_general(conn_params,"acumulado_rutificador")
+    
+    truncate_table_personal_general(conn_params,"acumulado_rut_detallle_entrada_salida")
+    truncate_table_personal_general(conn_params,"acumulado_resumen_rut_homolago_acumulado")
+    truncate_table_personal_general(conn_params,"acumulado_resumen_solo_rut_acumulado")
+    truncate_table_personal_general(conn_params,"resumen_pago")
+
     for i in listar_archivos("organismo/"):
-        print(i, end='\r')
+        #print(i, end='\r')
+        print(f"\r{i[:150]:<150}", end='')
         url = f"organismo/{i}"
         process_comuna(url)
+
     actualizar_DB_RUT()
+    truncate_update_personal2(conn_params)
+    save_estadistica_db_rut_historico()
+    save_organismo360()
 
 
 if __name__ == '__main__':
-    #truncate_table_personal(conn_params)
-    for i in listar_archivos("organismo/"):
-        print(i, end='\r')
-        url = f"organismo/{i}"
-        print(url, end='\r')
-        try:   
-            df = pd.read_csv(url, compression='xz', sep='\t', dtype=dtype_dict)
-        except Exception as e: 
-            df = pd.read_csv(url, compression='xz', sep='\t')
-        #process_comuna(f"organismo/{i}")
-    #actualizar_DB_RUT()
-    #https://github.com/Sud-Austral/BASE_COMUNAS_TRANSPARENCIA/raw/main/comunas/Corporaci%C3%B3n%20Municipal%20de%20Providencia.csv
-    """
-    truncate_table_personal(conn_params)
-    for comuna in comunas[:]:
-        print(comuna)
-        result = process_comuna(comuna)
-        # Eliminar la variable que contiene los datos grandes para liberar memoria
-        del result
-        gc.collect()
-        #break
-    actualizar_DB_RUT()
-    """
+    GLOBAL()
 
 
 
