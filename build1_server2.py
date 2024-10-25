@@ -1250,14 +1250,7 @@ def save_estadistica_db_rut_historico():
     salida = DB_RUT_HISTORICO.groupby(by=["Fecha"]).size().reset_index()
     salida.to_excel("estadistica_db_rut_historico.xlsx", index=False)
 
-def isMuni(padre):
-    if padre in lista_municipalidad:
-        return 1
-    return 0
-
-
-def save_organismo360():
-    lista_municipalidad = ['Municipios de Tarapacá',
+lista_municipalidad = ['Municipios de Tarapacá',
         'Municipios de Los Lagos',
         'Municipios de Aysen del General Carlos Ibáñez del Campo',
         'Municipios de Magallanes y de la Antártica Chilena',
@@ -1273,6 +1266,15 @@ def save_organismo360():
         'Municipios del Maule',
         'Municipios del Bíobio',
         'Municipios de La Araucanía', 'Corporaciones Municipales']
+        
+def isMuni(padre):
+    if padre in lista_municipalidad:
+        return 1
+    return 0
+
+
+def save_organismo360():
+    
     truncate_table_personal_general(conn_params,"organismo360")
     url =  "https://www.cplt.cl/transparencia_activa/datoabierto/archivos/Organismos_360.csv"
     df = pd.read_csv(url,sep=";",encoding="latin")
