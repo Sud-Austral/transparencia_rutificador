@@ -1069,6 +1069,7 @@ def get_resumen_anyo(df):
     return True
 
 def get_resumen_anyo2(df):
+    df2 = df[['organismo_nombre','anyo', 'Mes','rut','remuneracionbruta_mensual', 'remuliquida_mensual']]
     df2['remuneracionbruta_mean'] = df2.groupby(['organismo_nombre', 'anyo'])['remuneracionbruta_mensual'].transform('mean')
     df2['remuneracionbruta_std'] = df2.groupby(['organismo_nombre', 'anyo'])['remuneracionbruta_mensual'].transform('std')
 
@@ -1266,7 +1267,7 @@ lista_municipalidad = ['Municipios de Tarapacá',
         'Municipios del Maule',
         'Municipios del Bíobio',
         'Municipios de La Araucanía', 'Corporaciones Municipales']
-        
+
 def isMuni(padre):
     if padre in lista_municipalidad:
         return 1
@@ -1300,7 +1301,7 @@ def GLOBAL():
     cantidad_organismo = len(listar_archivos("organismo/"))
     for i in listar_archivos("organismo/"):
         #print(i, end='\r')
-        print(f"\r{n} de {len(cantidad_organismo)} {i[:150]:<150} ", end='')
+        print(f"\r{n} de {cantidad_organismo} {i[:150]:<150} ", end='')
         url = f"organismo/{i}"
         process_comuna(url)
         n += 1
