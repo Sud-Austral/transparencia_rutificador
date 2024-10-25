@@ -1116,7 +1116,7 @@ def get_resumen_anyo2(df):
         pagos__menos_12_count=('rut_menos_12', 'sum'),
         pagos_12_count=('rut_12', 'sum'),
         pagos_18_count=('rut_18', 'sum'),
-        pago_24_count=('rut_24', 'sum'),
+        pagos_24_count=('rut_24', 'sum'),
 
 
         rut__menos_12_count=('rut', lambda x: x[df2['rut_menos_12']].nunique()),
