@@ -1068,12 +1068,76 @@ def get_resumen_anyo(df):
     save_dataframe_general(df3,"resumen_pago",conn_params)
     return True
 
+def get_resumen_anyo2(df):
+    df2['remuneracionbruta_mean'] = df2.groupby(['organismo_nombre', 'anyo'])['remuneracionbruta_mensual'].transform('mean')
+    df2['remuneracionbruta_std'] = df2.groupby(['organismo_nombre', 'anyo'])['remuneracionbruta_mensual'].transform('std')
+
+    df2['remuliquida_mean'] = df2.groupby(['organismo_nombre', 'anyo'])['remuliquida_mensual'].transform('mean')
+    df2['remuliquida_std'] = df2.groupby(['organismo_nombre', 'anyo'])['remuliquida_mensual'].transform('std')
+
+    # Crear columnas que indican si cumplen la condición considerando el promedio y la desviación estándar por año
+    df2['remuneracionbruta_superior'] = df2['remuneracionbruta_mensual'] > (df2['remuneracionbruta_mean'] + 3 * df2['remuneracionbruta_std'])
+    df2['remuliquida_superior'] = df2['remuliquida_mensual'] > (df2['remuliquida_mean'] + 3 * df2['remuliquida_std'])
+
+    df2['remuliquida_10']       = df2['remuliquida_mensual']       > 5000000
+    df2['remuneracionbruta_10'] = df2['remuneracionbruta_mensual'] > 5000000
+
+
+    df2['rut_count'] = df2.groupby(['organismo_nombre', 'anyo', 'rut'])['rut'].transform('count')
+
+    # Crear columnas booleanas para los casos de duplicados, triplicados y más de 4
+    df2['rut_menos_12'] = df2['rut_count'] <= 12
+    df2['rut_12'] = (df2['rut_count'] > 12) & (df2['rut_count'] < 18)
+    df2['rut_18'] = (df2['rut_count'] >= 18) & (df2['rut_count'] < 24)
+    df2['rut_24'] = df2['rut_count'] >= 24
+
+    df3 = df2.groupby(by=['organismo_nombre', 'anyo']).agg(
+        rut_unique_count=('rut', 'nunique'),
+        remuneracionbruta_sum=('remuneracionbruta_mensual', 'sum'),
+        remuliquida_sum=('remuliquida_mensual', 'sum'),
+        meses_unicos=('Mes', 'nunique'),
+        pagos=('remuneracionbruta_mensual', 'count'),
+        
+        # Contar RUTs únicos que cumplen con las condiciones
+        remuneracionbruta_superior_rut_count=('rut', lambda x: x[df2['remuneracionbruta_superior']].nunique()),
+        remuliquida_superior_rut_count=('rut', lambda x: x[df2['remuliquida_superior']].nunique()),
+        remuneracionbruta_10_rut_count=('rut', lambda x: x[df2['remuneracionbruta_10']].nunique()),
+        remuliquida_10_rut_count=('rut', lambda x: x[df2['remuliquida_10']].nunique()),
+
+        remuneracionbruta_superior_count=('remuneracionbruta_superior', 'sum'),
+        remuliquida_superior_count=('remuliquida_superior', 'sum'),
+        remuneracionbruta_superior_10=('remuneracionbruta_10', 'sum'),
+        remuliquida_superior_10=('remuliquida_10', 'sum'),
+
+        remuneracionbruta_mean=('remuneracionbruta_mean', 'mean'),
+        remuliquida_mean=('remuliquida_mean', 'mean'),
+
+        pagos__menos_12_count=('rut_menos_12', 'sum'),
+        pagos_12_count=('rut_12', 'sum'),
+        pagos_18_count=('rut_18', 'sum'),
+        pago_24_count=('rut_24', 'sum'),
+
+
+        rut__menos_12_count=('rut', lambda x: x[df2['rut_menos_12']].nunique()),
+        rut_12_count=('rut', lambda x: x[df2['rut_12']].nunique()),
+        rut_18_count=('rut', lambda x: x[df2['rut_18']].nunique()),
+        rut_24_count=('rut', lambda x: x[df2['rut_24']].nunique()),
+
+        
+    ).reset_index()
+    df3["max_teorico"] = df3["rut_unique_count"] * df3["meses_unicos"]
+    df3["dif_pagos"] = df3["pagos"] - df3["max_teorico"]
+    df3["pago_x_persona"] = df3["pagos"] / df3["rut_unique_count"]
+    save_dataframe_general(df3,"resumen_pago2",conn_params)
+    return True
+
 
 
 def global_resumen(df):
     organismo = df.iloc[0].organismo_nombre
     df2 = clean_file(df)
     get_resumen_anyo(df2)
+    get_resumen_anyo2(df2)
     resultado1 = getEstadistica(df2)
     resultado2 = GetDetalle2(df2)
     merge = resultado1[1].merge(resultado2,on=['Fecha', 'base', 'Homologado'])
@@ -1186,16 +1250,40 @@ def save_estadistica_db_rut_historico():
     salida = DB_RUT_HISTORICO.groupby(by=["Fecha"]).size().reset_index()
     salida.to_excel("estadistica_db_rut_historico.xlsx", index=False)
 
+def isMuni(padre):
+    if padre in lista_municipalidad:
+        return 1
+    return 0
+
+
 def save_organismo360():
+    lista_municipalidad = ['Municipios de Tarapacá',
+        'Municipios de Los Lagos',
+        'Municipios de Aysen del General Carlos Ibáñez del Campo',
+        'Municipios de Magallanes y de la Antártica Chilena',
+        'Municipios de R. Metropolitana de Santiago',
+        'Municipios de Los Ríos',
+        'Municipios de Arica y  Parinacota',
+        'Municipios de Ñuble',
+        'Municipios de Antofagasta',
+        'Municipios de Atacama',
+        'Municipios de Coquimbo',
+        'Municipios de Valparaíso',
+        'Municipios del Libertador General Bernardo OHiggins',
+        'Municipios del Maule',
+        'Municipios del Bíobio',
+        'Municipios de La Araucanía', 'Corporaciones Municipales']
     truncate_table_personal_general(conn_params,"organismo360")
     url =  "https://www.cplt.cl/transparencia_activa/datoabierto/archivos/Organismos_360.csv"
     df = pd.read_csv(url,sep=";",encoding="latin")
     df2 = df.rename(columns = lambda x: x.lower())
+    df2["municipal"] = df2["padre_org"].apply(isMuni)
     save_dataframe_general(df2,"organismo360",conn_params)
 
 
 
 def GLOBAL():
+    save_organismo360()
     print("Limpiando tabla")
     #truncate_table_personal(conn_params)
     truncate_table_personal_general(conn_params,"personal2_base")
@@ -1205,10 +1293,12 @@ def GLOBAL():
     truncate_table_personal_general(conn_params,"acumulado_resumen_rut_homolago_acumulado")
     truncate_table_personal_general(conn_params,"acumulado_resumen_solo_rut_acumulado")
     truncate_table_personal_general(conn_params,"resumen_pago")
+    truncate_table_personal_general(conn_params,"resumen_pago2")
     n = 1
+    cantidad_organismo = len(listar_archivos("organismo/"))
     for i in listar_archivos("organismo/"):
         #print(i, end='\r')
-        print(f"\rPunto {n} {i[:150]:<150} ", end='')
+        print(f"\r{n} de {len(cantidad_organismo)} {i[:150]:<150} ", end='')
         url = f"organismo/{i}"
         process_comuna(url)
         n += 1
@@ -1216,7 +1306,7 @@ def GLOBAL():
     actualizar_DB_RUT()
     truncate_update_personal2(conn_params)
     save_estadistica_db_rut_historico()
-    save_organismo360()
+    
 
 
 if __name__ == '__main__':

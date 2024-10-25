@@ -145,6 +145,43 @@ CREATE TABLE resumen_pago (
     pago_x_persona NUMERIC(18, 6)
 );
 
+CREATE TABLE resumen_pago2 (
+    id SERIAL PRIMARY KEY,          -- Identificador único autoincremental
+    organismo_nombre VARCHAR(250),
+    anyo  INT,
+    rut_unique_count INT,
+    remuneracionbruta_sum BIGINT,
+    remuliquida_sum BIGINT,
+    meses_unicos  INT,
+    pagos BIGINT,
+
+    remuneracionbruta_superior_count BIGINT, 
+    remuliquida_superior_count BIGINT,
+    remuneracionbruta_superior_10 BIGINT,
+    remuliquida_superior_10 BIGINT,
+    remuneracionbruta_mean BIGINT,
+    remuliquida_mean BIGINT,
+
+    remuneracionbruta_superior_rut_count BIGINT, 
+    remuliquida_superior_rut_count BIGINT,
+    remuneracionbruta_10_rut_count BIGINT,
+    remuliquida_10_rut_count BIGINT,
+
+    pagos__menos_12_count BIGINT,
+    pagos_12_count BIGINT,
+    pagos_18_count BIGINT,
+    pagos_24_count BIGINT,
+    max_teorico BIGINT,
+    dif_pagos INT,
+    pago_x_persona NUMERIC(18, 6),
+
+    rut__menos_12_count BIGINT,
+    rut_12_count BIGINT,
+    rut_18_count BIGINT,
+    rut_24_count BIGINT
+
+);
+
 CREATE TABLE organismo360 (
     id SERIAL PRIMARY KEY,          -- Identificador único autoincremental
     codigo_org VARCHAR(250),
@@ -177,8 +214,13 @@ CREATE TABLE organismo360 (
     interopera VARCHAR(250),
     tiene_ta VARCHAR(250),
     fecha_ta DATE,
-    activado VARCHAR(250)
+    activado VARCHAR(250),
+    municipal INTEGER DEFAULT 0
+
 );
 
+
+ALTER TABLE organismo360
+ADD COLUMN municipal INTEGER DEFAULT 0;
 
 
