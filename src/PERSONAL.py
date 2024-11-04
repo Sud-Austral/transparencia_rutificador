@@ -75,4 +75,5 @@ def get_historial_persona(df,fecha,save_dataframe_general,conn_params):
     salida["meses"] = salida.apply(get_meses, axis=1)
     salida["organismo"] = df.iloc[0].organismo_nombre
     save_dataframe_general(salida,"resumen_personal_2024_6",conn_params)
+    del df["Fecha"]
     return salida
