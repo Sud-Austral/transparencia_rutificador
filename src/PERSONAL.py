@@ -62,11 +62,13 @@ def get_df_min(df,df_filtro2):
     
 
 def get_historial_persona(df,fecha,save_dataframe_general,conn_params):
+
     try:
         fecha_referencia = datetime.strptime(fecha, '%Y-%m')
         df["Fecha"] = df.apply(get_fecha2, axis=1)
         df2 = df[df["Fecha"] == fecha_referencia].sort_values('remuneracionbruta_mensual', ascending=False)
         if df2.empty:
+            del df["Fecha"]
             return None
         df_final = get_df_final(df2)
         rut = df2['rut'].unique()
