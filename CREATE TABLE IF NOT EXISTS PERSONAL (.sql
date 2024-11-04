@@ -227,22 +227,22 @@ ADD COLUMN municipal INTEGER DEFAULT 0;
 
 CREATE TABLE resumen_personal_2024_6(
     id SERIAL PRIMARY KEY,          -- Identificador único autoincremental
-    rut                                  VARCHAR(250),
-    nombre                               VARCHAR(250),
+    rut                                  VARCHAR(450),
+    nombre                               VARCHAR(450),
     remuneracionbruta_final              INTEGER,
     remuliquida_final                    INTEGER,
-    base_final                           VARCHAR(250),
-    homologado                           VARCHAR(250),
-    homologado_2                         VARCHAR(250),
-    tipo_cargo                           VARCHAR(250),
-    tipo_calificacionp                   VARCHAR(250),
+    base_final                           VARCHAR(450),
+    homologado                           VARCHAR(450),
+    homologado_2                         VARCHAR(450),
+    tipo_cargo                           VARCHAR(450),
+    tipo_calificacionp                   VARCHAR(450),
     pago_mes                              INTEGER,
     fecha_max                               DATE,
     fecha_min                               DATE,
-    base_inicial                         VARCHAR(250),
+    base_inicial                         VARCHAR(450),
     remuneracionbruta_inicial             INTEGER,
     remuliquida_inicial                 INTEGER,
     meses                                 INTEGER,
-    organismo                            VARCHAR(250)
+    organismo                            VARCHAR(450)
 )
 
