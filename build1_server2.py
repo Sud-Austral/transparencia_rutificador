@@ -1216,7 +1216,7 @@ def process_comuna(url):
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #print(7)
         df["metodo"] = ""
-        get_historial_persona(df,"2024-06",save_dataframe_general,conn_params)
+        #get_historial_persona(df,"2024-06",save_dataframe_general,conn_params)
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         #df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
