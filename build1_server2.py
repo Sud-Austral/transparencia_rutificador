@@ -19,6 +19,7 @@ import traceback  # Para el manejo y formateo de excepciones
 import psycopg2
 from psycopg2 import sql
 from sqlalchemy import create_engine
+from scr.PERSONAL import get_historial_persona
 
 def truncate_table_personal(db_config):
     """
@@ -987,7 +988,7 @@ def getEstadistica(df2):
     return [merge,merge4,Resumen_Fecha2]
 
 def GetDetalle2(df2):
-    df3 = df2[[ 'Fecha','rut','Homologado',"base"]].drop_duplicates()
+    df3 = df2[['Fecha','rut','Homologado',"base"]].drop_duplicates()
     agrupado_in = df3.groupby(['rut','Homologado',"base"]).min().reset_index()
     agrupado_in2 = agrupado_in.groupby(['Fecha','Homologado',"base"]).count().reset_index().rename(columns = {"rut":"rut_in"})
     
@@ -1215,7 +1216,7 @@ def process_comuna(url):
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #print(7)
         df["metodo"] = ""
-        
+        get_historial_persona(df,"2024-06",save_dataframe_to_postgres,conn_params)
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         #df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
