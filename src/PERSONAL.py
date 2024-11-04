@@ -66,6 +66,8 @@ def get_historial_persona(df,fecha,save_dataframe_general,conn_params):
         fecha_referencia = datetime.strptime(fecha, '%Y-%m')
         df["Fecha"] = df.apply(get_fecha2, axis=1)
         df2 = df[df["Fecha"] == fecha_referencia].sort_values('remuneracionbruta_mensual', ascending=False)
+        if df2.empty:
+            return None
         df_final = get_df_final(df2)
         rut = df2['rut'].unique()
         df_filtro1 = df[df['rut'].apply(lambda x: x in rut)].sort_values('remuneracionbruta_mensual')
@@ -83,3 +85,4 @@ def get_historial_persona(df,fecha,save_dataframe_general,conn_params):
         error_traceback = traceback.format_exc()
         print("Traceback detallado:")
         print(error_traceback)
+        return None
