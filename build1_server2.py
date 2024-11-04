@@ -19,7 +19,7 @@ import traceback  # Para el manejo y formateo de excepciones
 import psycopg2
 from psycopg2 import sql
 from sqlalchemy import create_engine
-from scr.PERSONAL import get_historial_persona
+from src.PERSONAL import get_historial_persona
 
 def truncate_table_personal(db_config):
     """
