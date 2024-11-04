@@ -1,7 +1,7 @@
 import pandas as pd
 from datetime import datetime 
 from dateutil.relativedelta import relativedelta
-
+import traceback
 
 def get_fecha2(fila):
     meses = {
@@ -62,18 +62,24 @@ def get_df_min(df,df_filtro2):
     
 
 def get_historial_persona(df,fecha,save_dataframe_general,conn_params):
-    fecha_referencia = datetime.strptime(fecha, '%Y-%m')
-    df["Fecha"] = df.apply(get_fecha2, axis=1)
-    df2 = df[df["Fecha"] == fecha_referencia].sort_values('remuneracionbruta_mensual', ascending=False)
-    df_final = get_df_final(df2)
-    rut = df2['rut'].unique()
-    df_filtro1 = df[df['rut'].apply(lambda x: x in rut)].sort_values('remuneracionbruta_mensual')
-    df_filtro2 = df_filtro1[df_filtro1["Fecha"] <= fecha_referencia].sort_values("remuneracionbruta_mensual")
-    df_fecha = get_df_fecha(df_filtro2)
-    df_inicial =  get_df_min(df_fecha,df_filtro2)
-    salida = df_final.merge(df_fecha).merge(df_inicial)
-    salida["meses"] = salida.apply(get_meses, axis=1)
-    salida["organismo"] = df.iloc[0].organismo_nombre
-    save_dataframe_general(salida,"resumen_personal_2024_6",conn_params)
-    del df["Fecha"]
-    return salida
+    try:
+        fecha_referencia = datetime.strptime(fecha, '%Y-%m')
+        df["Fecha"] = df.apply(get_fecha2, axis=1)
+        df2 = df[df["Fecha"] == fecha_referencia].sort_values('remuneracionbruta_mensual', ascending=False)
+        df_final = get_df_final(df2)
+        rut = df2['rut'].unique()
+        df_filtro1 = df[df['rut'].apply(lambda x: x in rut)].sort_values('remuneracionbruta_mensual')
+        df_filtro2 = df_filtro1[df_filtro1["Fecha"] <= fecha_referencia].sort_values("remuneracionbruta_mensual")
+        df_fecha = get_df_fecha(df_filtro2)
+        df_inicial =  get_df_min(df_fecha,df_filtro2)
+        salida = df_final.merge(df_fecha).merge(df_inicial)
+        salida["meses"] = salida.apply(get_meses, axis=1)
+        salida["organismo"] = df.iloc[0].organismo_nombre
+        save_dataframe_general(salida,"resumen_personal_2024_6",conn_params)
+        del df["Fecha"]
+        return salida
+    except Exception as e:
+        print(f"Error al procesar: {e}")
+        error_traceback = traceback.format_exc()
+        print("Traceback detallado:")
+        print(error_traceback)

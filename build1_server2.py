@@ -1216,16 +1216,16 @@ def process_comuna(url):
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #print(7)
         df["metodo"] = ""
-        print(1,df.columns)
+        
         get_historial_persona(df,"2024-06",save_dataframe_general,conn_params)
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
         #df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
-        print(2,df.columns)
+        
         global_resumen(df)
-        print(3,df.columns)
+        
         save_dataframe_to_postgres(df, conn_params)
-        print(4,df.columns)
+        
         merge = GetDetalle(df)
         save_dataframe_to_postgres2(merge, conn_params)
 
