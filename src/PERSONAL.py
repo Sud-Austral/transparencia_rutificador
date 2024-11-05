@@ -67,13 +67,16 @@ def get_historial_persona(df,fecha,save_dataframe_general,conn_params):
         fecha_referencia = datetime.strptime(fecha, '%Y-%m')
         df["Fecha"] = df.apply(get_fecha2, axis=1)
         df2 = df[df["Fecha"] == fecha_referencia].sort_values('remuneracionbruta_mensual', ascending=False)
+
         if df2.empty:
             del df["Fecha"]
             return None
+            
         df_final = get_df_final(df2)
         rut = df2['rut'].unique()
         df_filtro1 = df[df['rut'].apply(lambda x: x in rut)].sort_values('remuneracionbruta_mensual')
-        df_filtro2 = df_filtro1[df_filtro1["Fecha"] <= fecha_referencia].sort_values("remuneracionbruta_mensual")
+        fecha_actual = pd.Timestamp.today()
+        df_filtro2 = df_filtro1[df_filtro1["Fecha"] <= fecha_actual].sort_values("remuneracionbruta_mensual")
         df_fecha = get_df_fecha(df_filtro2)
         df_inicial =  get_df_min(df_fecha,df_filtro2)
         salida = df_final.merge(df_fecha).merge(df_inicial)
