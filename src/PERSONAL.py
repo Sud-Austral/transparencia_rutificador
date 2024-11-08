@@ -23,7 +23,7 @@ def get_meses(fila):
     final = fila["fecha_max"]
     diferencia = relativedelta(final, inicial)
     meses_totales = diferencia.years * 12 + diferencia.months
-    return meses_totales
+    return meses_totales + 1
     
 
 def get_df_final(df):
