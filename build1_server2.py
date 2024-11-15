@@ -20,6 +20,7 @@ import psycopg2
 from psycopg2 import sql
 from sqlalchemy import create_engine
 from src.PERSONAL import get_historial_persona
+import src.HISTORIAL
 
 def truncate_table_personal(db_config):
     """
@@ -1216,7 +1217,7 @@ def process_comuna(url):
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #print(7)
         df["metodo"] = ""
-        
+        src.HISTORIAL.pagos_multiples(df)
         get_historial_persona(df,"2024-06",save_dataframe_general,conn_params)
         #Guardar el DataFrame procesado en un archivo Excel
         #df.to_excel(f"test/{comuna}.xlsx", index=False)
