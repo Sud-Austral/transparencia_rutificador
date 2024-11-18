@@ -93,7 +93,7 @@ class ConnectionClass:
             engine (Engine): Instancia de SQLAlchemy Engine a cerrar.
         """
         engine.dispose()
-        print("Conexión cerrada.")
+        #print("Conexión cerrada.")
 
     def save_dataframe(self, df: pd.DataFrame, table_name: str):
         """

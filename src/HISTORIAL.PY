@@ -56,11 +56,15 @@ def pagos_multiples(df):
     Returns:
         pd.DataFrame: DataFrame con pagos múltiples identificados.
     """
-    df = df.copy()   
+    df = df.query("anyo > 2000 and anyo < 2030").copy()   
+
     organismo_nombre = df.iloc[0].organismo_nombre
     # Generar DataFrame único con fechas
     df2 = df[['organismo_nombre', 'anyo', 'Mes', 'rut']].drop_duplicates()
     df2["Fecha"] = df2.apply(get_fecha2, axis=1)    
+    
+    fecha_actual = pd.Timestamp.today()
+    df2 = df2[df2['Fecha'] < fecha_actual]
     # Filtrar por fecha de referencia
     fecha_referencia = datetime.strptime("2021-6", '%Y-%m')
     if diccionarioOrganismoMuni.get(organismo_nombre) == 0:
