@@ -113,6 +113,7 @@ def pagos_multiples(df):
     base = df[['rut', 'anyo', 'Mes', 'remuneracionbruta_mensual', 'remuliquida_mensual', "base"]].drop_duplicates()
     multiples8 = multiples7.merge(base, on=['rut', 'anyo', 'Mes', 'remuneracionbruta_mensual', 'remuliquida_mensual'])
     # Renombrar columnas a minúsculas
+    multiples8 = multiples8.rename(columns={"NombreEncontrado":"nombre_completo_x"})
     multiples8 = multiples8.rename(columns=str.lower)
     connection.save_dataframe(multiples8, "pagos_multiple2")
     return multiples8
