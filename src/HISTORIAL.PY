@@ -103,7 +103,7 @@ def pagos_multiples(df):
     del multiples6["organismo_nombre"]
     # Agregar datos adicionales de pagos
     pagos = df[[
-        "rut", "anyo", "Mes", "NombreCompleto_x", "Homologado",
+        "rut", "anyo", "Mes", "NombreEncontrado", "Homologado",
         "remuneracionbruta_mensual", "remuliquida_mensual"
     ]]
     multiples7 = multiples6.merge(pagos, on=["rut", "anyo", "Mes"])
