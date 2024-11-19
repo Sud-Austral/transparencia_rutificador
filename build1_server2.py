@@ -572,6 +572,11 @@ def rutificar_no_encontrado(df):
     return df
 
 def actualizar_DB_RUT():
+    trabajar = DB_RUT[DB_RUT["Nombre_merge"].isnull()]
+    trabajar["Nombre_merge"] = trabajar["NombreCompleto"]
+    nada = DB_RUT_HISTORICO[DB_RUT_HISTORICO["Nombre_merge"].notnull()]
+    DB_RUT = pd.concat([trabajar,nada]).reset_index()
+    del DB_RUT["index"]
     DB_RUT[:int(len(DB_RUT)/2)].to_csv("ENCONTRADOS_11_1.csv", index=False, compression='xz', sep='\t')
     DB_RUT[int(len(DB_RUT)/2):].to_csv("ENCONTRADOS_11_2.csv", index=False, compression='xz', sep='\t')
     return None
