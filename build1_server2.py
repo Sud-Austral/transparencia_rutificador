@@ -1298,7 +1298,7 @@ def save_organismo360():
 
 def recorrer_organismo_historial():
     global DB_RUT
-    h2.recorrer_organismo(DB_RUT)
+    H2.recorrer_organismo(DB_RUT)
     return None
 
 def GLOBAL():
