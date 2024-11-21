@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import datetime
 from src.DATABASE import ConnectionClass
+
 from concurrent.futures import ThreadPoolExecutor
 
 #from ConnectionClass import ConnectionClass  # Asegúrate de que esta clase esté correctamente configurada
@@ -27,7 +28,7 @@ for i,j in organismo[["organismo","municipal"]].iterrows():
     diccionarioOrganismoMuni[j["organismo"]] = j["municipal"]
 
 
-organismo2 = connection.fetch_table("SELECT DISTINCT organismo FROM public.pagos_multiple2")
+organismo2 = connection.fetch_table("SELECT DISTINCT organismo_nombre FROM public.tabla_auxiliar_historial")
 
 def get_fecha(fila):
     meses = {
@@ -113,24 +114,65 @@ def marca_trabajo_anterior(fila):
     return "Intersecto"
 
 def get_historial_personal(personal,df3):
-    print(df3)
-    personal = personal.copy()
-    aux = df3[df3["organismo_nombre"] != personal.iloc[0].organismo]
+    #personal = personal.copy()
+    aux = df3[df3["organismo_nombre"] != personal.iloc[0].organismo_nombre]
     personal2 = personal.merge(aux, on="rut", how="left")
-    personal2['Fecha'] = personal2['Fecha'].fillna(pd.Timestamp('1900-01-01'))
-    personal2["organismo_nombre_y"] = personal2["organismo_nombre_y"].fillna("Sin organismo anterior") 
+    #personal2['Fecha'] = personal2['Fecha'].fillna(pd.Timestamp('1900-01-01'))
+    #personal2["organismo_nombre_y"] = personal2["organismo_nombre_y"].fillna("Sin organismo anterior") 
+    personal2.fillna({'Fecha': pd.Timestamp('1900-01-01'), "organismo_nombre_y": "Sin organismo anterior"}, inplace=True)
+
     personal3 = personal2.groupby(['organismo_nombre_x', 'rut', 'fecha_max', 'fecha_min',
            'organismo_nombre_y']).agg(
                 fecha_anexo_max = ('Fecha', 'max'),
                 fecha_anexo_min = ('Fecha', 'min')
         ).reset_index()
-    personal4 = personal3.merge(organismo[["organismo","municipal"]], left_on="organismo_nombre_y", right_on="organismo", how="left")
-    del personal4["organismo"]
-    personal4["municipal"] = personal4["municipal"].fillna(2)
-    personal5 = personal4[personal4["fecha_min"] >= personal4["fecha_anexo_min"]]
-    personal5["trabajo_anterior"] = personal5.apply(marca_trabajo_anterior, axis=1)
-    personal6 = personal5.rename(columns={"organismo_nombre_x":"organismo_nombre_actual","organismo_nombre_y":"organismo_nombre_anterior"})
-    return personal6.rename(columns=lambda x: x .lower()) 
+
+    personal3 = personal3[personal3["fecha_min"] >= personal3["fecha_anexo_min"]]
+
+    personal3 = personal3.merge(
+        organismo[["organismo","municipal"]], 
+        left_on="organismo_nombre_y", 
+        right_on="organismo", 
+        how="left")
+    del personal3["organismo"]
+
+    personal3["municipal"] = personal3["municipal"].fillna(2)    
+    personal3["trabajo_anterior"] = personal3.apply(marca_trabajo_anterior, axis=1)
+
+    #personal3 = personal3.rename(columns={"organismo_nombre_x":"organismo_nombre_actual","organismo_nombre_y":"organismo_nombre_anterior"})
+    return personal3.rename(columns={"organismo_nombre_x": "organismo_nombre_actual", "organismo_nombre_y": "organismo_nombre_anterior"}).rename(columns=str.lower) 
+
+def get_detalle_historial(salida,df5):
+    aux = salida.merge(df5,left_on=['organismo_nombre_actual', 'rut', 'fecha_max'], right_on=['organismo_nombre','rut','Fecha'],suffixes=('', '_agregado1'), how='left') \
+        .merge(df5,left_on=['organismo_nombre_actual', 'rut', 'fecha_min'], right_on=['organismo_nombre','rut','Fecha'],suffixes=('', '_agregado2'), how='left')  \
+        .merge(df5,left_on=['organismo_nombre_anterior', 'rut', 'fecha_anexo_max'], right_on=['organismo_nombre','rut','Fecha'],suffixes=('', '_agregado3'), how='left') \
+        .merge(df5,left_on=['organismo_nombre_anterior', 'rut', 'fecha_anexo_min'], right_on=['organismo_nombre','rut','Fecha'],suffixes=('', '_agregado4'), how='left')
+    eliminar_columnas = ['organismo_nombre_agregado2',"Fecha","Fecha_agregado2","Fecha_agregado3","Fecha_agregado4","organismo_nombre",
+                     "organismo_nombre_agregado3","organismo_nombre_agregado4"]
+    for i in eliminar_columnas:
+        del aux[i]
+    aux2 = aux.rename(columns={"base":"base_max",
+                            "remuneracionbruta_mensual":"bruta_max",
+                        "remuliquida_mensual":"liquida_max",
+                        "homologado":"homologado_max",
+                            "base_agregado2":"base_min",
+                            "remuneracionbruta_mensual_agregado2":"bruta_min",
+                            "remuliquida_mensual_agregado2":"liquida_min",
+                            "homologado_agregado2":"homologado_min",
+                            "base_agregado3":"base_anexo_max",
+                            "remuneracionbruta_mensual_agregado3":"bruta_anexo_max",
+                            "remuliquida_mensual_agregado3":"liquida_anexo_max",
+                            "homologado_agregado3":"homologado_anexo_max",
+                            "base_agregado4":"base_anexo_min",
+                            "remuneracionbruta_mensual_agregado4":"bruta_anexo_min",
+                            "remuliquida_mensual_agregado4":"liquida_anexo_min",
+                            "homologado_agregado4":"homologado_anexo_min",
+                        })
+    return aux2
+
+    
+
+
 
 
 def recorrer_organismo():
@@ -138,12 +180,16 @@ def recorrer_organismo():
     #print(df2.columns)
     #print(df2.head())
     nada = connection.fetch_table("SELECT rut,organismo_nombre, anyo, mes, base,remuneracionbruta_mensual, remuliquida_mensual,homologado FROM personal2 LIMIT 1")
-    #fecha = df3[["anyo", "mes"]].drop_duplicates()
     nada["Fecha"] = nada.apply(get_fecha, axis=1)
-    for organismo in organismo2["organismo"]:
+    nada2 = nada.sort_values(['remuneracionbruta_mensual', 'remuliquida_mensual']).drop_duplicates(subset=['rut', 'organismo_nombre', 'Fecha'])
+    nada3 = nada2[['rut', 'organismo_nombre',  'base', 'remuneracionbruta_mensual', 'remuliquida_mensual', 'homologado','Fecha']]
+    #fecha = df3[["anyo", "mes"]].drop_duplicates()
+    
+    for organismo in organismo2["organismo_nombre"]:
         print(organismo)
-        resumen = connection.fetch_table(f"SELECT * FROM pagos_multiple2 WHERE organismo = '{organismo}'")
+        resumen = connection.fetch_table(f"SELECT * FROM tabla_auxiliar_historial WHERE organismo_nombre = '{organismo}'")
         df2 = get_historial_personal(resumen,nada)
-        break
+        df2 = get_detalle_historial(df2,nada3)
+        connection.save_dataframe(df2.rename(columns=lambda x: x.lower()), "tabla_pruebas2")
     print("Cierre")
 

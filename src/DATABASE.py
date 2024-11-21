@@ -77,7 +77,7 @@ class ConnectionClass:
         df = pd.DataFrame()
         try:
             df = pd.read_sql(query, engine)
-            print("Datos recuperados exitosamente.")
+            #print("Datos recuperados exitosamente.")
         except Exception as e:
             print(f"Error al recuperar datos: {e}")
             print(traceback.format_exc())

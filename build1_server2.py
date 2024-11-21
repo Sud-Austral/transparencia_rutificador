@@ -21,6 +21,7 @@ from psycopg2 import sql
 from sqlalchemy import create_engine
 from src.PERSONAL import get_historial_persona
 import src.HISTORIAL
+import src.HISTORIAL2 as H2
 
 def truncate_table_personal(db_config):
     """
@@ -572,6 +573,7 @@ def rutificar_no_encontrado(df):
     return df
 
 def actualizar_DB_RUT():
+    global DB_RUT  # Declara que usarás la variable global DB_RUT
     trabajar = DB_RUT[DB_RUT["Nombre_merge"].isnull()]
     trabajar["Nombre_merge"] = trabajar["NombreCompleto"]
     nada = DB_RUT_HISTORICO[DB_RUT_HISTORICO["Nombre_merge"].notnull()]
