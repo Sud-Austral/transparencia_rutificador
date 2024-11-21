@@ -2,8 +2,8 @@ import pandas as pd
 from datetime import datetime
 from src.DATABASE import ConnectionClass
 
-from concurrent.futures import ThreadPoolExecutor
-
+#from concurrent.futures import ThreadPoolExecutor
+import gc
 #from ConnectionClass import ConnectionClass  # Asegúrate de que esta clase esté correctamente configurada
 import traceback  # Para el manejo y formateo de excepciones
 import gc
@@ -175,21 +175,27 @@ def get_detalle_historial(salida,df5):
 
 
 
-def recorrer_organismo():
-    #df2 = get_base()
+def recorrer_organismo(DB_RUT):
+    ref2 = get_base()
+    DB_RUT2 = DB_RUT[["NombreCompleto","rut"]].drop_duplicates(subset=["rut"])
     #print(df2.columns)
     #print(df2.head())
-    nada = connection.fetch_table("SELECT rut,organismo_nombre, anyo, mes, base,remuneracionbruta_mensual, remuliquida_mensual,homologado FROM personal2 LIMIT 1")
-    nada["Fecha"] = nada.apply(get_fecha, axis=1)
-    nada2 = nada.sort_values(['remuneracionbruta_mensual', 'remuliquida_mensual']).drop_duplicates(subset=['rut', 'organismo_nombre', 'Fecha'])
-    nada3 = nada2[['rut', 'organismo_nombre',  'base', 'remuneracionbruta_mensual', 'remuliquida_mensual', 'homologado','Fecha']]
+    #nada = connection.fetch_table("SELECT rut,organismo_nombre, anyo, mes, base,remuneracionbruta_mensual, remuliquida_mensual,homologado FROM personal2 LIMIT 1")
+    #nada["Fecha"] = nada.apply(get_fecha, axis=1)
+    #nada2 = nada.sort_values(['remuneracionbruta_mensual', 'remuliquida_mensual']).drop_duplicates(subset=['rut', 'organismo_nombre', 'Fecha'])
+    #nada3 = nada2[['rut', 'organismo_nombre',  'base', 'remuneracionbruta_mensual', 'remuliquida_mensual', 'homologado','Fecha']]
     #fecha = df3[["anyo", "mes"]].drop_duplicates()
-    
+    ref2 = get_base()
+    ref3 = ref2.sort_values(['remuneracionbruta_mensual', 'remuliquida_mensual']).drop_duplicates(subset=['rut', 'organismo_nombre', 'Fecha'])
+    ref3 = ref3[['rut', 'organismo_nombre',  'base', 'remuneracionbruta_mensual', 'remuliquida_mensual', 'homologado','Fecha']]
     for organismo in organismo2["organismo_nombre"]:
         print(organismo)
         resumen = connection.fetch_table(f"SELECT * FROM tabla_auxiliar_historial WHERE organismo_nombre = '{organismo}'")
-        df2 = get_historial_personal(resumen,nada)
-        df2 = get_detalle_historial(df2,nada3)
-        connection.save_dataframe(df2.rename(columns=lambda x: x.lower()), "tabla_pruebas2")
+        resumen = get_historial_personal(resumen,ref2)
+        resumen = get_detalle_historial(resumen,ref3)
+        resumen = resumen.merge(DB_RUT2)  
+        #connection.save_dataframe(df2.rename(columns=lambda x: x.lower()), "tabla_pruebas2")
+        del resumen
+        gc.collect()
     print("Cierre")
 

@@ -1296,7 +1296,10 @@ def save_organismo360():
     df2["municipal"] = df2["padre_org"].apply(isMuni)
     save_dataframe_general(df2,"organismo360",conn_params)
 
-
+def recorrer_organismo_historial():
+    global DB_RUT
+    h2.recorrer_organismo(DB_RUT)
+    return None
 
 def GLOBAL():
     save_organismo360()
@@ -1323,6 +1326,7 @@ def GLOBAL():
     actualizar_DB_RUT()
     truncate_update_personal2(conn_params)
     save_estadistica_db_rut_historico()
+    recorrer_organismo_historial()
     
 
 
