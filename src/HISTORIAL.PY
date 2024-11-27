@@ -75,6 +75,8 @@ def pagos_multiples(df):
     ).reset_index()
     df4 = df3[df3["fecha_min"] >= fecha_referencia]
     connection.save_dataframe(df4.rename(columns=lambda x: x.lower()), "tabla_auxiliar_historial")
+    df4_2 = df3[df3["fecha_max"] >= fecha_referencia]
+    connection.save_dataframe(df4_2.rename(columns=lambda x: x.lower()), "tabla_auxiliar_historial2")
     # Identificar pagos múltiples
     multiples = df4[["organismo_nombre", "rut"]]
     multiples2 = multiples.merge(df, on=["organismo_nombre", "rut"])

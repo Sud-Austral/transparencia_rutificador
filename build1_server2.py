@@ -1314,6 +1314,8 @@ def GLOBAL():
     truncate_table_personal_general(conn_params,"resumen_pago")
     truncate_table_personal_general(conn_params,"resumen_pago2")
     truncate_table_personal_general(conn_params,"resumen_personal_2024_6")
+    truncate_table_personal_general(conn_params,"tabla_auxiliar_historial")
+    truncate_table_personal_general(conn_params,"tabla_auxiliar_historial2")
     n = 1
     cantidad_organismo = len(listar_archivos("organismo/"))
     for i in listar_archivos("organismo/"):

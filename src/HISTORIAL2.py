@@ -15,18 +15,12 @@ conn_params = {
     'host': '186.67.61.251'
 }
 
-
 # Crear instancia de conexión
 connection = ConnectionClass(conn_params)
-
-
-# Cargar datos de organismo
+# Extraer la relación entre organismos y si son municipales desde la base de datos
 organismo = connection.fetch_table("SELECT * FROM organismo360")
-
-diccionarioOrganismoMuni = {}
-for i,j in organismo[["organismo","municipal"]].iterrows():
-    diccionarioOrganismoMuni[j["organismo"]] = j["municipal"]
-
+# Crear un diccionario con 'organismo' como clave y 'municipal' como valor
+diccionarioOrganismoMuni = dict(zip(organismo["organismo"], organismo["municipal"]))
 
 organismo2 = connection.fetch_table("SELECT DISTINCT organismo_nombre FROM public.tabla_auxiliar_historial")
 
@@ -177,20 +171,13 @@ def get_detalle_historial(salida,df5):
 
 def recorrer_organismo(DB_RUT):
     ref2 = get_base()
-    DB_RUT2 = DB_RUT[["NombreCompleto","rut"]].drop_duplicates(subset=["rut"])
-    #print(df2.columns)
-    #print(df2.head())
-    #nada = connection.fetch_table("SELECT rut,organismo_nombre, anyo, mes, base,remuneracionbruta_mensual, remuliquida_mensual,homologado FROM personal2 LIMIT 1")
-    #nada["Fecha"] = nada.apply(get_fecha, axis=1)
-    #nada2 = nada.sort_values(['remuneracionbruta_mensual', 'remuliquida_mensual']).drop_duplicates(subset=['rut', 'organismo_nombre', 'Fecha'])
-    #nada3 = nada2[['rut', 'organismo_nombre',  'base', 'remuneracionbruta_mensual', 'remuliquida_mensual', 'homologado','Fecha']]
-    #fecha = df3[["anyo", "mes"]].drop_duplicates()
+    DB_RUT2 = DB_RUT[["NombreCompleto","rut"]].drop_duplicates(subset=["rut"])    
     ref2 = get_base()
     ref3 = ref2.sort_values(['remuneracionbruta_mensual', 'remuliquida_mensual']).drop_duplicates(subset=['rut', 'organismo_nombre', 'Fecha'])
     ref3 = ref3[['rut', 'organismo_nombre',  'base', 'remuneracionbruta_mensual', 'remuliquida_mensual', 'homologado','Fecha']]
-    for organismo in organismo2["organismo_nombre"]:
-        print(organismo)
-        resumen = connection.fetch_table(f"SELECT * FROM tabla_auxiliar_historial WHERE organismo_nombre = '{organismo}'")
+    for organismo_for in organismo2["organismo_nombre"]:
+        print(organismo_for)
+        resumen = connection.fetch_table(f"SELECT * FROM tabla_auxiliar_historial WHERE organismo_nombre = '{organismo_for}'")
         resumen = get_historial_personal(resumen,ref2)
         resumen = get_detalle_historial(resumen,ref3)
         resumen = resumen.merge(DB_RUT2)  

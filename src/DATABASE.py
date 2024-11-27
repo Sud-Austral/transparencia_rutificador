@@ -24,6 +24,7 @@ class ConnectionClass:
             conn_params (dict): Diccionario con los detalles de la conexión.
                                 Debe contener las claves 'user', 'password', 'host', y 'dbname'.
         """
+        print("Crear objeto")
         self.conn_params = conn_params
 
     def get_engine(self) -> Engine:
