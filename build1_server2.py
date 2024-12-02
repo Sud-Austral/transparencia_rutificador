@@ -1328,7 +1328,7 @@ def GLOBAL():
     actualizar_DB_RUT()
     truncate_update_personal2(conn_params)
     save_estadistica_db_rut_historico()
-    recorrer_organismo_historial()
+    #recorrer_organismo_historial()
     
 
 
