@@ -6,7 +6,7 @@ from src.DATABASE import ConnectionClass
 import gc
 #from ConnectionClass import ConnectionClass  # Asegúrate de que esta clase esté correctamente configurada
 import traceback  # Para el manejo y formateo de excepciones
-import gc
+
 # Configuración de conexión
 conn_params = {
     'dbname': 'postgres',
@@ -21,6 +21,9 @@ connection = ConnectionClass(conn_params)
 organismo = connection.fetch_table("SELECT * FROM organismo360")
 # Crear un diccionario con 'organismo' como clave y 'municipal' como valor
 diccionarioOrganismoMuni = dict(zip(organismo["organismo"], organismo["municipal"]))
+diccionarioOrganismoMuni["Subsecretaria de Evaluación Social"] = 0
+diccionarioOrganismoMuni["CFT de la Región de Coquimbo"] = 0
+
 
 organismo2 = connection.fetch_table("SELECT DISTINCT organismo_nombre FROM public.tabla_auxiliar_historial")
 
@@ -108,12 +111,33 @@ def marca_trabajo_anterior(fila):
     return "Intersecto"
 
 def get_historial_personal(personal,df3):
-    #personal = personal.copy()
-    aux = df3[df3["organismo_nombre"] != personal.iloc[0].organismo_nombre]
-    personal2 = personal.merge(aux, on="rut", how="left")
+    """
+    Obtiene el historial personal de empleados comparando entre diferentes organismos.
+    
+    Args:
+        personal (pd.DataFrame): DataFrame con información del personal actual
+        df3 (pd.DataFrame): DataFrame con historial completo
+        organismo (pd.DataFrame): DataFrame con información de organismos
+    
+    Returns:
+        pd.DataFrame: Historial procesado del personal
+    """
+    # 2. Constantes
+    DEFAULT_DATE = pd.Timestamp('1900-01-01')
+    DEFAULT_ORG = "Sin organismo anterior"
+
+    rut_unicos  = frozenset(personal["rut"].unique())
+    #aux = aux[aux["rut"].apply(lambda x: x in lista_rut)]
+    #aux = aux[aux["rut"].isin(lista_rut)]
+    org_nombre = personal.iloc[0].organismo_nombre
+    aux = df3.loc[
+            (df3["organismo_nombre"] != org_nombre) &
+            (df3["rut"].isin(rut_unicos))
+        ]
+    personal2 = personal.merge(aux, on="rut", how="left", sort=False)
     #personal2['Fecha'] = personal2['Fecha'].fillna(pd.Timestamp('1900-01-01'))
     #personal2["organismo_nombre_y"] = personal2["organismo_nombre_y"].fillna("Sin organismo anterior") 
-    personal2.fillna({'Fecha': pd.Timestamp('1900-01-01'), "organismo_nombre_y": "Sin organismo anterior"}, inplace=True)
+    personal2.fillna({'Fecha': DEFAULT_DATE, "organismo_nombre_y": DEFAULT_ORG}, inplace=True)
 
     personal3 = personal2.groupby(['organismo_nombre_x', 'rut', 'fecha_max', 'fecha_min',
            'organismo_nombre_y']).agg(
@@ -128,8 +152,8 @@ def get_historial_personal(personal,df3):
         left_on="organismo_nombre_y", 
         right_on="organismo", 
         how="left")
-    del personal3["organismo"]
-
+    #del personal3["organismo"]
+    personal3.drop(columns=["organismo"], inplace=True)
     personal3["municipal"] = personal3["municipal"].fillna(2)    
     personal3["trabajo_anterior"] = personal3.apply(marca_trabajo_anterior, axis=1)
 

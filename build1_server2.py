@@ -1224,6 +1224,7 @@ def process_comuna(url):
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #print(7)
         df["metodo"] = ""
+        
         src.HISTORIAL.pagos_multiples(df)
         get_historial_persona(df,"2024-06",save_dataframe_general,conn_params)
         #Guardar el DataFrame procesado en un archivo Excel
@@ -1293,6 +1294,7 @@ def save_organismo360():
     url =  "https://www.cplt.cl/transparencia_activa/datoabierto/archivos/Organismos_360.csv"
     df = pd.read_csv(url,sep=";",encoding="latin")
     df2 = df.rename(columns = lambda x: x.lower())
+    
     df2["municipal"] = df2["padre_org"].apply(isMuni)
     save_dataframe_general(df2,"organismo360",conn_params)
 
@@ -1302,7 +1304,7 @@ def recorrer_organismo_historial():
     return None
 
 def GLOBAL():
-    save_organismo360()
+    #save_organismo360()
     print("Limpiando tabla")
     #truncate_table_personal(conn_params)
     truncate_table_personal_general(conn_params,"personal2_base")
@@ -1324,9 +1326,11 @@ def GLOBAL():
         url = f"organismo/{i}"
         process_comuna(url)
         n += 1
-
+    print("actualizar_DB_RUT")
     actualizar_DB_RUT()
+    print("truncate_update_personal2")
     truncate_update_personal2(conn_params)
+    print("save_estadistica_db_rut_historico")
     save_estadistica_db_rut_historico()
     #recorrer_organismo_historial()
     

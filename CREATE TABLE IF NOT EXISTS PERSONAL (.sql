@@ -216,8 +216,13 @@ CREATE TABLE organismo360 (
     fecha_ta DATE,
     activado VARCHAR(250),
     municipal INTEGER DEFAULT 0
+    fecha_max DATE,
+    fecha_min DATE
 
 );
+
+ALTER TABLE organismo360 ADD COLUMN fecha_max DATE;
+ALTER TABLE organismo360 ADD COLUMN fecha_min DATE;
 
 
 ALTER TABLE organismo360
