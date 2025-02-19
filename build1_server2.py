@@ -122,6 +122,8 @@ def truncate_update_personal2(db_config):
             tipo_calificacionp, 
             tipo_cargo, 
             key, 
+            fecha_ingreso, 
+            fecha_termino,
             metodo
         ) 
         SELECT 
@@ -145,6 +147,8 @@ def truncate_update_personal2(db_config):
             tipo_calificacionp, 
             tipo_cargo, 
             key, 
+            fecha_ingreso, 
+            fecha_termino,
             metodo 
         FROM personal2_base;
     """
@@ -223,6 +227,8 @@ def save_dataframe_to_postgres(df, conn_params):
                         'homologado',
                         'homologado_2',
                         'key',
+                        'fecha_ingreso', 
+                        'fecha_termino',
                         'metodo']
         df.to_sql(table_name, engine, if_exists='append', index=False)
         #print(f"Datos guardados en la tabla personal con éxito.")
@@ -467,29 +473,23 @@ def limpiar_texto(texto):
 def get_nombre_completo(df):
     """
     Procesa las columnas 'Nombres', 'Paterno' y 'Materno' de un DataFrame para crear una nueva columna 'NombreCompleto'.
-    La función limpia y transforma los textos antes de combinarlos en una sola columna.
-    
+    La función limpia y transforma los textos antes de combinarlos en una sola columna.    
     Args:
         df (pd.DataFrame): El DataFrame que contiene las columnas 'Nombres', 'Paterno' y 'Materno'.
-        
     Returns:
         pd.DataFrame: El DataFrame original con una nueva columna 'NombreCompleto' añadida.
     """
     # Aplicar funciones de limpieza y transformación a la columna 'Nombres'
     df["Nombres2"] = df["Nombres"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
-    
     # Aplicar funciones de limpieza y transformación a la columna 'Paterno'
     df["Paterno2"] = df["Paterno"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
-    
     # Aplicar funciones de limpieza y transformación a la columna 'Materno'
     df["Materno2"] = df["Materno"].apply(eliminar_espacios_adicionales).apply(transformar_string).apply(limpiar_texto)
-    
     # Crear la columna 'NombreCompleto' combinando las columnas procesadas 'Paterno2', 'Materno2' y 'Nombres2'
     df["NombreCompleto"] = df[['Paterno2', 'Materno2', 'Nombres2']].apply(
         lambda row: ' '.join(row.dropna().astype(str)).strip(), axis=1
     )    
     return df
-
 
 def rutificar_problematico(df):
     """
@@ -1203,7 +1203,7 @@ def process_comuna(url):
         #print(2)
         df = rutificador(df)[['organismo_nombre', 'anyo', 'Mes', 
        'tipo_calificacionp', 'Tipo cargo', 'remuneracionbruta_mensual',
-       'remuliquida_mensual', 'base', 'tipo_pago', 'num_cuotas','NombreCompleto', 'rut', 'Nombre_merge']]
+       'remuliquida_mensual', 'base', 'tipo_pago', 'num_cuotas','NombreCompleto', 'rut', 'Nombre_merge','fecha_ingreso', 'fecha_termino']]
         #print(3)
         df = getPagos(df)
         #print(4)
@@ -1212,14 +1212,14 @@ def process_comuna(url):
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
        'Nombre_merge', 'Cantidad de pagos en un mes',
         'Detalle de base en pagos en un mes',
-       'Tipo de contrato distintos', 'Homologado','key',"clean"]]
+       'Tipo de contrato distintos', 'Homologado','key',"clean",'fecha_ingreso', 'fecha_termino']]
         #print(5)
         df = calificacion_nivel_2(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
        'Tipo cargo', 'remuneracionbruta_mensual', 'remuliquida_mensual',
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
        'Nombre_merge', 'Cantidad de pagos en un mes',
         'Detalle de base en pagos en un mes',
-       'Tipo de contrato distintos', 'Homologado',  'Homologado 2','key']]
+       'Tipo de contrato distintos', 'Homologado',  'Homologado 2','key','fecha_ingreso', 'fecha_termino']]
         #print(6)
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #print(7)
