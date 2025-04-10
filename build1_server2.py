@@ -22,6 +22,7 @@ from sqlalchemy import create_engine
 from src.PERSONAL import get_historial_persona
 import src.HISTORIAL
 import src.HISTORIAL2 as H2
+from src.RUT_AGE import rut_age
 
 def truncate_table_personal(db_config):
     """
@@ -124,7 +125,17 @@ def truncate_update_personal2(db_config):
             key, 
             fecha_ingreso, 
             fecha_termino,
-            metodo
+            metodo,
+            horasextra,
+            pago_extra_diurnas,
+            horas_extra_diurnas, 
+            pago_extra_nocturnas, 
+            horas_extra_nocturnas,
+            pago_extra_festivas, 
+            horas_extra_festivas, 
+            dias_desde_1900,
+            age_personal, 
+            age_label
         ) 
         SELECT 
             id, 
@@ -149,7 +160,17 @@ def truncate_update_personal2(db_config):
             key, 
             fecha_ingreso, 
             fecha_termino,
-            metodo 
+            metodo,
+            horasextra,
+            pago_extra_diurnas,
+            horas_extra_diurnas, 
+            pago_extra_nocturnas, 
+            horas_extra_nocturnas,
+            pago_extra_festivas, 
+            horas_extra_festivas, 
+            dias_desde_1900,
+            age_personal, 
+            age_label
         FROM personal2_base;
     """
 
@@ -208,6 +229,7 @@ def save_dataframe_to_postgres(df, conn_params):
         engine = create_engine(conn_string)
 
         # Guardar el DataFrame en la tabla
+
         df.columns = ['organismo_nombre',
                         'anyo',
                         'mes',
@@ -229,6 +251,13 @@ def save_dataframe_to_postgres(df, conn_params):
                         'key',
                         'fecha_ingreso', 
                         'fecha_termino',
+                        'horasextra', 
+                        'pago_extra_diurnas',
+                        'horas_extra_diurnas', 
+                        'pago_extra_nocturnas', 
+                        'horas_extra_nocturnas',
+                        'pago_extra_festivas', 
+                        'horas_extra_festivas',
                         'metodo']
         df.to_sql(table_name, engine, if_exists='append', index=False)
         #print(f"Datos guardados en la tabla personal con éxito.")
@@ -1196,14 +1225,32 @@ def process_comuna(url):
         # Leer el archivo CSV
         #print(1)
         #df = pd.read_csv(url, compression='xz', sep='\t', dtype=dtype_dict) #.head(800000)
+        columns_fechas = ['fecha_ingreso', 'fecha_termino']
+        for i in columns_fechas:
+            if i not in df.columns:
+                df[i] = None
         
+        columns_horas_extra = ["horasextra",'pago_extra_diurnas',
+                                'horas_extra_diurnas',
+                                'pago_extra_nocturnas',
+                                'horas_extra_nocturnas',
+                                'pago_extra_festivas',
+                                'horas_extra_festivas']
+    
+        for i in columns_horas_extra[1:]:
+            if i in df.columns:
+                df[i] = df[i].apply(fixRemuneracion)
+            else:
+                df[i] = None
 
+        if "horasextra" not in df.columns:
+            df["horasextra"] = None
         # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
         #print(2)
         df = rutificador(df)[['organismo_nombre', 'anyo', 'Mes', 
        'tipo_calificacionp', 'Tipo cargo', 'remuneracionbruta_mensual',
-       'remuliquida_mensual', 'base', 'tipo_pago', 'num_cuotas','NombreCompleto', 'rut', 'Nombre_merge','fecha_ingreso', 'fecha_termino']]
+       'remuliquida_mensual', 'base', 'tipo_pago', 'num_cuotas','NombreCompleto', 'rut', 'Nombre_merge','fecha_ingreso', 'fecha_termino'] +columns_horas_extra]
         #print(3)
         df = getPagos(df)
         #print(4)
@@ -1212,14 +1259,14 @@ def process_comuna(url):
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
        'Nombre_merge', 'Cantidad de pagos en un mes',
         'Detalle de base en pagos en un mes',
-       'Tipo de contrato distintos', 'Homologado','key',"clean",'fecha_ingreso', 'fecha_termino']]
+       'Tipo de contrato distintos', 'Homologado','key',"clean",'fecha_ingreso', 'fecha_termino']+columns_horas_extra]
         #print(5)
         df = calificacion_nivel_2(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
        'Tipo cargo', 'remuneracionbruta_mensual', 'remuliquida_mensual',
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
        'Nombre_merge', 'Cantidad de pagos en un mes',
         'Detalle de base en pagos en un mes',
-       'Tipo de contrato distintos', 'Homologado',  'Homologado 2','key','fecha_ingreso', 'fecha_termino']]
+       'Tipo de contrato distintos', 'Homologado',  'Homologado 2','key','fecha_ingreso', 'fecha_termino']+columns_horas_extra]
         #print(6)
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
         #print(7)
@@ -1232,7 +1279,7 @@ def process_comuna(url):
         #df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
         
         global_resumen(df)
-        
+        df = rut_age(df)
         save_dataframe_to_postgres(df, conn_params)
         
         merge = GetDetalle(df)
