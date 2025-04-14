@@ -69,13 +69,31 @@ def getRUT(rut):
         return int(rut.split("-")[0])
     except:
         return None
+    
+def get_fecha(fila):
+    meses = {
+        "Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4,
+        "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8,
+        "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12
+    }
+    try:
+        mes_numero = meses[fila["mes"]]
+        fecha_string = f'{int(fila["anyo"])}-{mes_numero}'
+        fecha_dt = datetime.strptime(fecha_string, '%Y-%m')
+    except Exception as e:
+        fecha_dt = datetime.strptime("2099-01", '%Y-%m')
+    
+    return fecha_dt.strftime("%Y-%m-%d")
 
 def rut_age(df: pd.DataFrame) -> pd.DataFrame:
-    df["rut2"] = df["rut"].apply(getRUT)    
+    df["rut2"] = df["rut"].apply(getRUT)  
+    df["fecha"] = df.apply(get_fecha, axis = 1) 
     df["dias_desde_1900"] = exponential_1(df["rut2"],*popt_filtrado)
     del df["rut2"]
     df["age_personal"] = df.apply(get_age, axis=1)
-    df['intervalo'] = pd.cut(df['age_label'], bins=[18,30,50,65,85], right=False)
+    df['age_personal'] = df['age_personal'].fillna(0)
+    df['intervalo'] = pd.cut(df['age_personal'], bins=[18,30,50,65,85], right=False)
+    df["age_label"] = df['intervalo'].apply(lambda x: f"{x.left} a {x.right}")
     del df["intervalo"]
-    df["age_label"] = df['intervalo'].progress_apply(lambda x: f"{x.left} a {x.right}")
+    del df["fecha"]
     return df

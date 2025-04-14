@@ -258,7 +258,11 @@ def save_dataframe_to_postgres(df, conn_params):
                         'horas_extra_nocturnas',
                         'pago_extra_festivas', 
                         'horas_extra_festivas',
-                        'metodo']
+                        'metodo',
+                        'dias_desde_1900',
+                        'age_personal',
+                        'age_label'
+                        ]
         df.to_sql(table_name, engine, if_exists='append', index=False)
         #print(f"Datos guardados en la tabla personal con éxito.")
     except Exception as e:
