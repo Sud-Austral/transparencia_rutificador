@@ -276,8 +276,8 @@ conn_params = {
     'dbname': 'postgres',
     'user': 'postgres',
     'password': 'UnaCasaEnUnArbol2024',
-    'host': 'localhost'
-    #'host': '186.67.61.251'
+    #'host': 'localhost'
+    'host': '186.67.61.251'
 }
 
 
@@ -1345,7 +1345,51 @@ def save_organismo360():
     url =  "https://www.cplt.cl/transparencia_activa/datoabierto/archivos/Organismos_360.csv"
     df = pd.read_csv(url,sep=";",encoding="latin")
     df2 = df.rename(columns = lambda x: x.lower())
+    cambio = {'Instituto Nacional de Hidráulica (INH)':'Obras Públicas','Servicio Nacional de Reinserción Social Juvenil':'Justicia'}
     
+    cambio2 = {'I. Municipalidad de Macul': 'Municipalidad de Macul',
+                'Municipalidad de Aysén': 'Municipalidad de Aysen',
+                'Corporación de Deportes de la Municipalidad de Independencia': 'Corporación de Deportes de Independencia',
+                'Corporación Municipal de Deportes de Rancagua': 'Corporación Municipal de Deportes Rancagua',
+                'Corporación Municipal de Salud de Panguipulli': 'Corporación Municipal de Salud y Educación de Panguipulli',
+                'Fundación para el Desarrollo de la Cultura y las Artes de la comuna de Punta Arenas': 'Fundación para el Desarrollo de las Artes y la Cultura de la comuna de Punta Arenas',
+                'SEREMI de Salud región de Los Lagos': 'SEREMI de Salud de Los Lagos',
+                'Subsecretaría de Evaluación Social': 'Subsecretaria de Evaluación Social',
+                'Administradora de los Tribunales Tributarios y Aduaneros y del Tribunal de Contratación Pública': 'Administradora de los Tribunales Tributarios y Aduaneros (ATTA)',
+                'Centro de Formación Técnica Estatal Región de Coquimbo': 'CFT de la Región de Coquimbo',
+                'CFT de la Región Metropolitana (CFTRM)': 'CFT de la región metropolitana',
+                'Corporación de Deporte y Recreacion de La Municipalidad de Aysén': 'Corporación del Deporte de La Municipalidad de Aysén',
+                'Corporación Municipal de Deportes de Iquique (CORMUDEPI)': 'Corporación Municipal de Deportes de Iquique',
+                'Corporación Municipal de Desarrollo Social de Tiltil': 'Corporación Municipal de Desarrollo Social de Til Til',
+                'Delegación Presidencial Provincial del Ranco': 'Delegación Presidencial Provincial de Ranco',
+                'Ilustre Municipalidad de Constitución': 'Municipalidad de Constitución',
+                'Servicio Local de Educación Pública Andalién Sur (SLEP Andalién Sur)': 'Servicio Local de Educación Pública Andalién Sur',
+                'Servicio Local de Educación Pública Atacama (SLEP Atacama)': 'Servicio Local de Educación Pública Atacama',
+                'Servicio Local de Educación Pública Chinchorro (SLEP Chinchorro)': 'Servicio Local de Educación Pública Chinchorro',
+                'Servicio Local de Educación Pública Colchagua (SLEP Colchagua)': 'Servicio Local de Educación Pública Colchagua',
+                'Servicio Local de Educación Pública Costa Araucanía (SLEP Costa Araucanía)': 'Servicio Local de Educación Pública Costa Araucanía',
+                'Servicio Local de Educación Pública de Andalién Costa (SLEP Andalién Costa)': 'Servicio Local de Educación Pública de Andalién Costa',
+                'Servicio Local de Educación Pública de Aysén (SLEP Aysén)': 'Servicio Local de Educación Pública de Aysén',
+                'Servicio Local de Educación Pública de Barrancas (SLEP Barrancas)': 'Servicio Local de Educación Pública de Barrancas',
+                'Servicio Local de Educación Pública de Iquique (SLEP Iquique)': 'Servicio Local de Educación Pública de Iquique',
+                'Servicio Local de Educación Pública de Magallanes (SLEP Magallanes)': 'Servicio Local de Educación Pública de Magallanes',
+                'Servicio Local de Educación Pública Gabriela Mistral (SLEP Gabriela Mistral)': 'Servicio Local de Educación Pública Gabriela Mistral',
+                'Servicio Local de Educación Pública Huasco (SLEP Huasco)': 'Servicio Local de Educación Pública Huasco',
+                'Servicio Local de Educación Pública Llanquihue (SLEP Llanquihue)': 'Servicio Local de Educación Pública Llanquihue',
+                'Servicio Local de Educación Pública Valdivia (SLEP Valdivia)': 'Servicio Local de Educación Pública Valdivia',
+                'Servicio Local de Educación Pública Valparaíso (SLEP Valparaíso)': 'Servicio Local de Educación Pública Valparaíso'} 
+    
+    df2["padre_org"] = df2["padre_org"].apply(lambda x: cambio.get(x, x))
+    df2["organismo"] = df2["organismo"].apply(lambda x: cambio2.get(x, x))
+
+    fila_nueva = { 'organismo': 'Corporación Municipal de San Joaquin',
+                    'codigo_padre': 'CM000',
+                    'padre_org': 'Corporaciones Municipales',
+                    'region': 'Región Metropolitana de Santiago',
+                    'municipalidad': 'SAN JOAQUÍN',
+                    'activado': 'SÍ'}
+    df2.loc[len(df2)] = fila_nueva
+
     df2["municipal"] = df2["padre_org"].apply(isMuni)
     save_dataframe_general(df2,"organismo360",conn_params)
 
