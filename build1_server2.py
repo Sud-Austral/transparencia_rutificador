@@ -203,7 +203,7 @@ def truncate_update_personal2(db_config):
         if conn:
             conn.close()
 
-def save_dataframe_to_postgres(df, conn_params):
+def save_dataframe_to_postgres_deprecated(df, conn_params):
     table_name = "personal2_base"
     """
     try:
@@ -263,6 +263,8 @@ def save_dataframe_to_postgres(df, conn_params):
                         'age_personal',
                         'age_label'
                         ]
+        organismo = df.iloc[0].organismo_nombre
+        df.to_csv("salida/{organismo}.csv", index=False, compression='xz', sep='\t')
         df.to_sql(table_name, engine, if_exists='append', index=False)
         #print(f"Datos guardados en la tabla personal con éxito.")
     except Exception as e:
@@ -270,6 +272,51 @@ def save_dataframe_to_postgres(df, conn_params):
         error_traceback = traceback.format_exc()
         print("Traceback detallado en SQL:")
         print(error_traceback)
+
+def save_dataframe_to_postgres(df, conn_params):
+    table_name = "personal2_base"
+    
+    # Construir string de conexión SQLAlchemy
+    conn_string = (
+        f"postgresql://{conn_params['user']}:{conn_params['password']}"
+        f"@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}"
+    )
+
+    # Renombrar columnas (asegúrate de que coincidan con las de la tabla)
+    df.columns = [
+        'organismo_nombre', 'anyo', 'mes', 'tipo_calificacionp', 'tipo_cargo',
+        'remuneracionbruta_mensual', 'remuliquida_mensual', 'base', 'tipo_pago',
+        'num_cuotas', 'nombrecompleto_x', 'rut', 'nombreencontrado',
+        'cantidad_de_pago', 'detalle_de_base', 'tipo_de_contrato',
+        'homologado', 'homologado_2', 'key', 'fecha_ingreso', 'fecha_termino',
+        'horasextra', 'pago_extra_diurnas', 'horas_extra_diurnas',
+        'pago_extra_nocturnas', 'horas_extra_nocturnas', 'pago_extra_festivas',
+        'horas_extra_festivas', 'metodo', 'dias_desde_1900', 'age_personal',
+        'age_label'
+    ]
+
+    # Guardar CSV de respaldo
+    try:
+        organismo = df.iloc[0].organismo_nombre
+        df.to_csv(f"salida/{organismo}.csv", index=False, compression='xz', sep='\t')
+    except Exception as e:
+        print(f"No se pudo guardar el CSV de respaldo: {e}")
+
+    # Intentar guardar en la base de datos con reintentos
+    for attempt in range(0, 10):
+        try:
+            engine = create_engine(conn_string)
+            df.to_sql(table_name, engine, if_exists='append', index=False)
+            print(f"Datos guardados exitosamente en intento {attempt}")
+            break  # Éxito, sal del bucle
+        except Exception as e:
+            print(f"Intento {attempt} de {10} fallido: {e}")
+            print(traceback.format_exc())
+
+        if attempt +1  == 10:
+            print("Se alcanzó el número máximo de reintentos. Abortando.")
+        else:
+            time.sleep(5)  # Esperar antes de reintentar
 
 # Ejemplo de uso
 conn_params = {
@@ -1249,9 +1296,16 @@ def process_comuna(url):
 
         if "horasextra" not in df.columns:
             df["horasextra"] = None
+        if "tipo_pago" not in df.columns:
+            df["tipo_pago"] = None
+        if "num_cuotas" not in df.columns:
+            df["num_cuotas"] = None
+        if "Tipo cargo" not in df.columns:
+            df["Tipo cargo"] = None
         # Procesar el DataFrame a través de las funciones específicas
         df = get_nombre_completo(df)
         #print(2)
+
         df = rutificador(df)[['organismo_nombre', 'anyo', 'Mes', 
        'tipo_calificacionp', 'Tipo cargo', 'remuneracionbruta_mensual',
        'remuliquida_mensual', 'base', 'tipo_pago', 'num_cuotas','NombreCompleto', 'rut', 'Nombre_merge','fecha_ingreso', 'fecha_termino'] +columns_horas_extra]
@@ -1428,6 +1482,7 @@ def GLOBAL():
     print("save_estadistica_db_rut_historico")
     save_estadistica_db_rut_historico()
     #recorrer_organismo_historial()
+    print("CERRAR")
     
 
 
