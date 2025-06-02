@@ -108,6 +108,9 @@ class ConnectionClass:
             None
         """
         engine = self.get_engine()
+        if df.empty:
+            self.close_engine(engine)
+            return 
         try:
             df.to_sql(table_name, engine, if_exists='append', index=False)
         except Exception as e:

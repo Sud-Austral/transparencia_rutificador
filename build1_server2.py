@@ -281,9 +281,10 @@ def save_dataframe_to_postgres(df, conn_params):
         f"postgresql://{conn_params['user']}:{conn_params['password']}"
         f"@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}"
     )
-
+    print(df.columns)
     # Renombrar columnas (asegúrate de que coincidan con las de la tabla)
     df.columns = [
+        "organismo_codigo",
         'organismo_nombre', 'anyo', 'mes', 'tipo_calificacionp', 'tipo_cargo',
         'remuneracionbruta_mensual', 'remuliquida_mensual', 'base', 'tipo_pago',
         'num_cuotas', 'nombrecompleto_x', 'rut', 'nombreencontrado',
@@ -1306,20 +1307,20 @@ def process_comuna(url):
         df = get_nombre_completo(df)
         #print(2)
 
-        df = rutificador(df)[['organismo_nombre', 'anyo', 'Mes', 
+        df = rutificador(df)[["organismo_codigo",'organismo_nombre', 'anyo', 'Mes', 
        'tipo_calificacionp', 'Tipo cargo', 'remuneracionbruta_mensual',
        'remuliquida_mensual', 'base', 'tipo_pago', 'num_cuotas','NombreCompleto', 'rut', 'Nombre_merge','fecha_ingreso', 'fecha_termino'] +columns_horas_extra]
         #print(3)
         df = getPagos(df)
         #print(4)
-        df = calificacion_nivel_1(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
+        df = calificacion_nivel_1(df)[["organismo_codigo",'organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
        'Tipo cargo', 'remuneracionbruta_mensual', 'remuliquida_mensual',
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
        'Nombre_merge', 'Cantidad de pagos en un mes',
         'Detalle de base en pagos en un mes',
        'Tipo de contrato distintos', 'Homologado','key',"clean",'fecha_ingreso', 'fecha_termino']+columns_horas_extra]
         #print(5)
-        df = calificacion_nivel_2(df)[['organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
+        df = calificacion_nivel_2(df)[["organismo_codigo",'organismo_nombre', 'anyo', 'Mes', 'tipo_calificacionp',
        'Tipo cargo', 'remuneracionbruta_mensual', 'remuliquida_mensual',
        'base', 'tipo_pago', 'num_cuotas', 'NombreCompleto', 'rut',
        'Nombre_merge', 'Cantidad de pagos en un mes',
