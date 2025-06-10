@@ -135,7 +135,8 @@ def truncate_update_personal2(db_config):
             horas_extra_festivas, 
             dias_desde_1900,
             age_personal, 
-            age_label
+            age_label,
+            organismo_codigo
         ) 
         SELECT 
             id, 
@@ -170,7 +171,8 @@ def truncate_update_personal2(db_config):
             horas_extra_festivas, 
             dias_desde_1900,
             age_personal, 
-            age_label
+            age_label,
+            organismo_codigo
         FROM personal2_base;
     """
 
@@ -281,7 +283,7 @@ def save_dataframe_to_postgres(df, conn_params):
         f"postgresql://{conn_params['user']}:{conn_params['password']}"
         f"@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}"
     )
-    print(df.columns)
+    #print(df.columns)
     # Renombrar columnas (asegúrate de que coincidan con las de la tabla)
     df.columns = [
         "organismo_codigo",
@@ -1338,6 +1340,7 @@ def process_comuna(url):
         #df.to_csv(f"test/{comuna}.csv", index=False,compression='xz', sep='\t')
         
         global_resumen(df)
+        df = df.rename(columns={'Mes': 'mes'})
         df = rut_age(df)
         save_dataframe_to_postgres(df, conn_params)
         
