@@ -1438,7 +1438,7 @@ def save_organismo360():
                 'Servicio Local de Educación Pública Valparaíso (SLEP Valparaíso)': 'Servicio Local de Educación Pública Valparaíso'} 
     
     df2["padre_org"] = df2["padre_org"].apply(lambda x: cambio.get(x, x))
-    df2["organismo"] = df2["organismo"].apply(lambda x: cambio2.get(x, x))
+    #df2["organismo"] = df2["organismo"].apply(lambda x: cambio2.get(x, x))
 
     fila_nueva = { 'organismo': 'Corporación Municipal de San Joaquin',
                     'codigo_padre': 'CM000',
@@ -1447,6 +1447,13 @@ def save_organismo360():
                     'municipalidad': 'SAN JOAQUÍN',
                     'activado': 'SÍ'}
     df2.loc[len(df2)] = fila_nueva
+    ref = pd.read_csv("referencia_organismo360.csv")[['codigo_org', 'idorg', 'organismo', 'codigo_padre', 'padre_org',
+       'region', 'municipalidad', 'direccion', 'telefono', 'url_organismo',
+       'url_orgtransparencia', 'horario_publico', 'nombre_encargado', 'email',
+       'num_cuenta', 'rut', 'tipo_cuenta', 'banco', 'url_sai', 'fax',
+       'ingresa', 'obligadorecibir_sai', 'organismo_autonomo', 'interopera',
+       'tiene_ta', 'fecha_ta', 'activado']]
+    df2 = pd.concat([df2,ref])
 
     df2["municipal"] = df2["padre_org"].apply(isMuni)
     save_dataframe_general(df2,"organismo360",conn_params)
