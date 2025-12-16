@@ -23,6 +23,7 @@ from src.PERSONAL import get_historial_persona
 import src.HISTORIAL
 import src.HISTORIAL2 as H2
 from src.RUT_AGE import rut_age
+from src.SEXO import get_sexo
 
 def truncate_table_personal(db_config):
     """
@@ -136,7 +137,8 @@ def truncate_update_personal2(db_config):
             dias_desde_1900,
             age_personal, 
             age_label,
-            organismo_codigo
+            organismo_codigo,
+            sexo
         ) 
         SELECT 
             id, 
@@ -172,7 +174,8 @@ def truncate_update_personal2(db_config):
             dias_desde_1900,
             age_personal, 
             age_label,
-            organismo_codigo
+            organismo_codigo,
+            sexo
         FROM personal2_base;
     """
 
@@ -283,7 +286,6 @@ def save_dataframe_to_postgres(df, conn_params):
         f"postgresql://{conn_params['user']}:{conn_params['password']}"
         f"@{conn_params['host']}:{conn_params.get('port', 5432)}/{conn_params['dbname']}"
     )
-    #print(df.columns)
     # Renombrar columnas (asegúrate de que coincidan con las de la tabla)
     df.columns = [
         "organismo_codigo",
@@ -295,7 +297,7 @@ def save_dataframe_to_postgres(df, conn_params):
         'horasextra', 'pago_extra_diurnas', 'horas_extra_diurnas',
         'pago_extra_nocturnas', 'horas_extra_nocturnas', 'pago_extra_festivas',
         'horas_extra_festivas', 'metodo', 'dias_desde_1900', 'age_personal',
-        'age_label'
+        'age_label','sexo'
     ]
 
     # Guardar CSV de respaldo
@@ -656,15 +658,40 @@ def rutificar_no_encontrado(df):
     return df
 
 def actualizar_DB_RUT():
-    global DB_RUT  # Declara que usarás la variable global DB_RUT
-    trabajar = DB_RUT[DB_RUT["Nombre_merge"].isnull()]
+    global DB_RUT
+
+    # Copias para evitar SettingWithCopyWarning
+    trabajar = DB_RUT.loc[DB_RUT["Nombre_merge"].isna()].copy()
+    historico = DB_RUT_HISTORICO.loc[
+        DB_RUT_HISTORICO["Nombre_merge"].notna()
+    ].copy()
+
+    # Completar Nombre_merge cuando esté vacío
     trabajar["Nombre_merge"] = trabajar["NombreCompleto"]
-    nada = DB_RUT_HISTORICO[DB_RUT_HISTORICO["Nombre_merge"].notnull()]
-    DB_RUT = pd.concat([trabajar,nada]).reset_index()
-    del DB_RUT["index"]
-    DB_RUT[:int(len(DB_RUT)/2)].to_csv("ENCONTRADOS_11_1.csv", index=False, compression='xz', sep='\t')
-    DB_RUT[int(len(DB_RUT)/2):].to_csv("ENCONTRADOS_11_2.csv", index=False, compression='xz', sep='\t')
-    return None
+
+    # Unir resultados
+    DB_RUT = (
+        pd.concat([trabajar, historico], ignore_index=True)
+    )
+
+    # Dividir el DataFrame en dos partes
+    mitad = len(DB_RUT) // 2
+
+    DB_RUT.iloc[:mitad].to_csv(
+        "ENCONTRADOS_11_1.csv",
+        index=False,
+        compression="xz",
+        sep="\t"
+    )
+
+    DB_RUT.iloc[mitad:].to_csv(
+        "ENCONTRADOS_11_2.csv",
+        index=False,
+        compression="xz",
+        sep="\t"
+    )
+    return True
+
 
 
 def save_new_rut(encontrado, no_encontrados):
@@ -1330,6 +1357,7 @@ def process_comuna(url):
        'Tipo de contrato distintos', 'Homologado',  'Homologado 2','key','fecha_ingreso', 'fecha_termino']+columns_horas_extra]
         #print(6)
         df = df.rename(columns={'NombreCompleto': 'NombreCompleto_x', 'Nombre_merge': 'NombreEncontrado'})
+        
         #print(7)
         df["metodo"] = ""
         
@@ -1342,6 +1370,7 @@ def process_comuna(url):
         global_resumen(df)
         df = df.rename(columns={'Mes': 'mes'})
         df = rut_age(df)
+        df = get_sexo(df)
         save_dataframe_to_postgres(df, conn_params)
         
         merge = GetDetalle(df)
@@ -1438,7 +1467,7 @@ def save_organismo360():
                 'Servicio Local de Educación Pública Valparaíso (SLEP Valparaíso)': 'Servicio Local de Educación Pública Valparaíso'} 
     
     df2["padre_org"] = df2["padre_org"].apply(lambda x: cambio.get(x, x))
-    #df2["organismo"] = df2["organismo"].apply(lambda x: cambio2.get(x, x))
+    df2["organismo"] = df2["organismo"].apply(lambda x: cambio2.get(x, x))
 
     fila_nueva = { 'organismo': 'Corporación Municipal de San Joaquin',
                     'codigo_padre': 'CM000',
@@ -1453,7 +1482,7 @@ def save_organismo360():
        'num_cuenta', 'rut', 'tipo_cuenta', 'banco', 'url_sai', 'fax',
        'ingresa', 'obligadorecibir_sai', 'organismo_autonomo', 'interopera',
        'tiene_ta', 'fecha_ta', 'activado']]
-    df2 = pd.concat([df2,ref])
+    df2 = pd.concat([df2,ref]).drop_duplicates(subset="organismo")
 
     df2["municipal"] = df2["padre_org"].apply(isMuni)
     save_dataframe_general(df2,"organismo360",conn_params)
